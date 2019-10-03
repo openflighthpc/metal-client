@@ -62,6 +62,11 @@ module MetalClient
       tmp.write(read)
       tmp.rewind
       TTY::Editor.open(tmp.path)
+      tmp.rewind
+      Faraday.post(upload_url,
+                   tmp.read,
+                   "Authorization" => "Bearer #{ENV['AUTH_TOKEN']}",
+                   "Content-Type" => "application/octet-stream")
     ensure
       tmp.close
       tmp.unlink
