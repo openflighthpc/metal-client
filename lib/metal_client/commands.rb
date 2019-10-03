@@ -47,7 +47,7 @@ module MetalClient
       end
 
       def list
-        pp self.class.model_class.all.map(&:attributes)
+        puts self.class.model_class.all.map(&:id).sort
       end
 
       def show(name)
