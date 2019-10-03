@@ -51,7 +51,17 @@ module MetalClient
       end
 
       def show(name)
-        pp self.class.model_class.find(name).first.attributes
+        pp find(name).attributes
+      end
+
+      def edit(name)
+        find(name).edit
+      end
+
+      private
+
+      def find(name)
+        self.class.model_class.find(name).first
       end
     end
 

@@ -57,16 +57,20 @@ module MetalClient
       self.class.connection.faraday.get(download_url).body
     end
 
+    def upload(path)
+      Faraday.post(upload_url,
+                   File.read(path),
+                   "Authorization" => "Bearer #{ENV['AUTH_TOKEN']}",
+                   "Content-Type" => "application/octet-stream")
+    end
+
     def edit
       tmp = Tempfile.new('metal-client-download', '/tmp')
       tmp.write(read)
       tmp.rewind
       TTY::Editor.open(tmp.path)
       tmp.rewind
-      Faraday.post(upload_url,
-                   tmp.read,
-                   "Authorization" => "Bearer #{ENV['AUTH_TOKEN']}",
-                   "Content-Type" => "application/octet-stream")
+      upload(tmp.path)
     ensure
       tmp.close
       tmp.unlink

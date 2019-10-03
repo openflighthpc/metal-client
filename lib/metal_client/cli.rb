@@ -97,6 +97,12 @@ module MetalClient
         c.summary = "Display the metadata about a #{klass.cli_type} file"
         action(c, klass, method: :show)
       end
+
+      command "#{klass.cli_type} edit" do |c|
+        cli_syntax(c, 'NAME')
+        c.summary = "Edit the content of the stored file"
+        action(c, klass, method: :edit)
+      end
     end
   end
 end
