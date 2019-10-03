@@ -104,6 +104,13 @@ module MetalClient
         c.option '--file PATH', 'Directly upload a file from the specified path'
         action(c, klass, method: :edit)
       end
+
+      command "#{klass.cli_type} create" do |c|
+        cli_syntax(c, 'NAME')
+        c.summary = 'Create a new metadata entry for a file'
+        c.option '--file PATH', 'Directly upload a file from the specified path'
+        action(c, klass, method: :create)
+      end
     end
   end
 end

@@ -62,6 +62,10 @@ module MetalClient
         end
       end
 
+      def create(name, file: nil)
+        self.class.model_class.create(id: name)
+      end
+
       private
 
       def find(name)
