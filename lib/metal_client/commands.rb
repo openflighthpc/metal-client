@@ -30,26 +30,58 @@
 module MetalClient
   module Commands
     class FileCommand
+      def self.inherited(base)
+        FileCommand.inherited_classes << base
+      end
+
+      def self.inherited_classes
+        @inherited_classes ||= []
+      end
+
+      def self.cli_type
+        raise NotImplementedError
+      end
+
+      def self.model_class
+        raise NotImplementedError
+      end
+
       def list
-        pp model_class.all.map(&:attributes)
+        pp self.class.model_class.all.map(&:attributes)
       end
 
       def show(name)
-        pp model_class.find(name).first.attributes
-      end
-
-      private
-
-      def model_class
-        raise NotImplementedError
+        pp self.class.model_class.find(name).first.attributes
       end
     end
 
     class KickstartCommand < FileCommand
-      private
+      def self.cli_type
+        'kickstart'
+      end
 
-      def model_class
+      def self.model_class
         Models::Kickstart
+      end
+    end
+
+    class UefiCommand < FileCommand
+      def self.cli_type
+        'uefibootmenu'
+      end
+
+      def self.model_class
+        Models::Uefi
+      end
+    end
+
+    class LegacyCommand < FileCommand
+      def self.cli_type
+        'legacybootmenu'
+      end
+
+      def self.model_class
+        Models::Legacy
       end
     end
   end

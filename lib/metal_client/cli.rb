@@ -79,22 +79,24 @@ module MetalClient
       SYNTAX
     end
 
-    command 'kickstart' do |c|
-      cli_syntax(c)
-      c.sub_command_group = true
-      c.summary = 'Manage the kickstart files'
-    end
+    Commands::FileCommand.inherited_classes.each do |klass|
+      command "#{klass.cli_type}" do |c|
+        cli_syntax(c)
+        c.sub_command_group = true
+        c.summary = "Manage the #{klass.cli_type} files"
+      end
 
-    command 'kickstart list' do |c|
-      cli_syntax(c)
-      c.summary = 'List all the kickstart files'
-      action(c, Commands::KickstartCommand, method: :list)
-    end
+      command "#{klass.cli_type} list"  do |c|
+        cli_syntax(c)
+        c.summary = "List all the #{klass.cli_type} files"
+        action(c, klass, method: :list)
+      end
 
-    command 'kickstart show' do |c|
-      cli_syntax(c, 'NAME')
-      c.summary = 'Display the metadata about a kickstart file'
-      action(c, Commands::KickstartCommand, method: :show)
+      command "#{klass.cli_type} show" do |c|
+        cli_syntax(c, 'NAME')
+        c.summary = "Display the metadata about a #{klass.cli_type} file"
+        action(c, klass, method: :show)
+      end
     end
   end
 end
