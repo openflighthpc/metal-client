@@ -50,33 +50,45 @@ module MetalClient
     end
 
     def read
-      open_download_url.read
+      open_download_url(&:read)
     end
 
     def edit
-      open_download_url do |io|
-        begin
-          file = if io.respond_to?(:path)
-                   io
-                 else
-                   Tempfile.new('metal-client', '/tmp').tap do |tmp|
-                     IO.copy_stream(io, tmp)
-                     tmp.rewind
-                   end
-                 end
-          TTY::Editor.open(file.path)
-          raise 'Do not no how to upload'
-        ensure
-          file.close
-          file.unlink
-        end
+      open_download_url do |file|
+        TTY::Editor.open(file.path)
       end
     end
 
     private
 
     def open_download_url(&b)
-      open(download_url, 'Authorization' => "Bearer #{ENV['AUTH_TOKEN']}", &b)
+      file = nil
+      io = open(download_url, 'Authorization' => "Bearer #{ENV['AUTH_TOKEN']}")
+      file = case io
+             when Tempfile
+               io
+             else
+               Tempfile.new('metal-server', '/tmp').tap do |tmp|
+                 begin
+                   IO.copy_stream(io, tmp)
+                   tmp.rewind
+                 rescue => e
+                   tmp.close
+                   tmp.unlink
+                   raise e
+                 ensure
+                   io.close
+                 end
+                end
+             end
+      b ? b.call(file) : file
+    ensure
+      if b && file
+        file.close
+        file.unlink
+      elsif b
+        io.close
+      end
     end
   end
 
