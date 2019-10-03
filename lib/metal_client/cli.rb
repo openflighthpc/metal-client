@@ -79,7 +79,7 @@ module MetalClient
       SYNTAX
     end
 
-    Commands::FileCommand.inherited_classes.each do |klass|
+    [Commands::BootMethodCommand, *Commands::FileCommand.inherited_classes].each do |klass|
       command "#{klass.cli_type}" do |c|
         cli_syntax(c)
         c.sub_command_group = true

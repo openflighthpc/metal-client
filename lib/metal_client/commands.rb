@@ -102,6 +102,21 @@ module MetalClient
         Models::Legacy
       end
     end
+
+    # Does not inherit off FileCommand as it must form a composite of the kernels and initrds
+    class BootMethodCommand
+      def self.cli_type
+        'bootmethod'
+      end
+
+      def list
+        puts [Models::KernelFile, Models::Initrd].map(&:all)
+                                                 .flatten
+                                                 .map(&:id)
+                                                 .uniq
+                                                 .sort
+      end
+    end
   end
 end
 

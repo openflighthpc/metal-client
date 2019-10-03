@@ -95,6 +95,15 @@ module MetalClient
 
     class DhcpSubnet < FileModel
     end
+
+    class KernelFile < FileModel
+      def self.table_name
+        'kernels'
+      end
+    end
+
+    class Initrd < FileModel
+    end
   end
 end
 
