@@ -101,6 +101,7 @@ module MetalClient
       command "#{klass.cli_type} edit" do |c|
         cli_syntax(c, 'NAME')
         c.summary = "Edit the content of the stored file"
+        c.option '--file PATH', 'Directly upload a file from the specified path'
         action(c, klass, method: :edit)
       end
     end

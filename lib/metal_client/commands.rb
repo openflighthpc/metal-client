@@ -54,8 +54,12 @@ module MetalClient
         pp find(name).attributes
       end
 
-      def edit(name)
-        find(name).edit
+      def edit(name, file: nil)
+        if file
+          find(name).upload(file)
+        else
+          find(name).edit
+        end
       end
 
       private
