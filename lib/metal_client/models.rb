@@ -45,50 +45,26 @@ module MetalClient
       attributes["download-url"]
     end
 
+    def upload_url
+      File.join(links['self'], 'upload')
+    end
+
     def system_path
       attributes["system-path"]
     end
 
     def read
-      open_download_url(&:read)
+      self.class.connection.faraday.get(download_url).body
     end
 
     def edit
-      open_download_url do |file|
-        TTY::Editor.open(file.path)
-      end
-    end
-
-    private
-
-    def open_download_url
-      file = nil
-      io = open(download_url, 'Authorization' => "Bearer #{ENV['AUTH_TOKEN']}")
-      file = case io
-             when Tempfile
-               io
-             else
-               Tempfile.new('metal-client-download', '/tmp').tap do |tmp|
-                 begin
-                   IO.copy_stream(io, tmp)
-                   tmp.rewind
-                 rescue => e
-                   tmp.close
-                   tmp.unlink
-                   raise e
-                 ensure
-                   io.close
-                 end
-                end
-             end
-      yield file
+      tmp = Tempfile.new('metal-client-download', '/tmp')
+      tmp.write(read)
+      tmp.rewind
+      TTY::Editor.open(tmp.path)
     ensure
-      if file
-        file.close
-        file.unlink
-      else
-        io.close
-      end
+      tmp.close
+      tmp.unlink
     end
   end
 
