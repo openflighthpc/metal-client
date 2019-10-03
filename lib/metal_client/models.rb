@@ -57,6 +57,10 @@ module MetalClient
       self.class.connection.faraday.get(download_url).body
     end
 
+    def uploaded?
+      attributes[:uploaded]
+    end
+
     def upload(path)
       Faraday.post(upload_url,
                    File.read(path),
@@ -66,8 +70,10 @@ module MetalClient
 
     def edit
       tmp = Tempfile.new('metal-client-download', '/tmp')
-      tmp.write(read)
-      tmp.rewind
+      if uploaded?
+        tmp.write(read)
+        tmp.rewind
+      end
       TTY::Editor.open(tmp.path)
       tmp.rewind
       upload(tmp.path)
