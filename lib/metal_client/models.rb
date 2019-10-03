@@ -49,6 +49,10 @@ module MetalClient
       attributes["system-path"]
     end
 
+    def read
+      open_download_url.read
+    end
+
     def edit
       open_download_url do |io|
         begin
