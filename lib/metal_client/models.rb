@@ -61,14 +61,14 @@ module MetalClient
 
     private
 
-    def open_download_url(&b)
+    def open_download_url
       file = nil
       io = open(download_url, 'Authorization' => "Bearer #{ENV['AUTH_TOKEN']}")
       file = case io
              when Tempfile
                io
              else
-               Tempfile.new('metal-server', '/tmp').tap do |tmp|
+               Tempfile.new('metal-client-download', '/tmp').tap do |tmp|
                  begin
                    IO.copy_stream(io, tmp)
                    tmp.rewind
@@ -81,12 +81,12 @@ module MetalClient
                  end
                 end
              end
-      b ? b.call(file) : file
+      yield file
     ensure
-      if b && file
+      if file
         file.close
         file.unlink
-      elsif b
+      else
         io.close
       end
     end
