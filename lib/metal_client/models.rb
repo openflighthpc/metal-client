@@ -28,6 +28,9 @@
 #===============================================================================
 
 require 'json_api_client'
+require 'open-uri'
+require 'tempfile'
+require 'tty-editor'
 
 module MetalClient
   class FileModel < JsonApiClient::Resource
@@ -36,6 +39,40 @@ module MetalClient
 
     connection do |c|
       c.faraday.authorization :Bearer, ENV['AUTH_TOKEN']
+    end
+
+    def download_url
+      attributes["download-url"]
+    end
+
+    def system_path
+      attributes["system-path"]
+    end
+
+    def edit
+      open_download_url do |io|
+        begin
+          file = if io.respond_to?(:path)
+                   io
+                 else
+                   Tempfile.new('metal-client', '/tmp').tap do |tmp|
+                     IO.copy_stream(io, tmp)
+                     tmp.rewind
+                   end
+                 end
+          TTY::Editor.open(file.path)
+          raise 'Do not no how to upload'
+        ensure
+          file.close
+          file.unlink
+        end
+      end
+    end
+
+    private
+
+    def open_download_url(&b)
+      open(download_url, 'Authorization' => "Bearer #{ENV['AUTH_TOKEN']}", &b)
     end
   end
 
@@ -53,5 +90,4 @@ module MetalClient
     end
   end
 end
-
 

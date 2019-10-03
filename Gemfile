@@ -5,6 +5,7 @@ source "https://rubygems.org"
 git_source(:github) {|repo_name| "https://github.com/#{repo_name}" }
 
 gem 'json_api_client'
+gem 'tty-editor'
 
 # TODO: Make me development only
 gem 'pry'
