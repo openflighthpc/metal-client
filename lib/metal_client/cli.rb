@@ -28,6 +28,7 @@
 
 require 'commander'
 require 'metal_client/models'
+require 'metal_client/commands'
 
 module MetalClient
   # TODO: Move me to a new file
@@ -82,6 +83,18 @@ module MetalClient
       cli_syntax(c)
       c.sub_command_group = true
       c.summary = 'Manage the kickstart files'
+    end
+
+    command 'kickstart list' do |c|
+      cli_syntax(c)
+      c.summary = 'List all the kickstart files'
+      action(c, Commands::KickstartCommand, method: :list)
+    end
+
+    command 'kickstart show' do |c|
+      cli_syntax(c, 'NAME')
+      c.summary = 'Display the metadata about a kickstart file'
+      action(c, Commands::KickstartCommand, method: :show)
     end
   end
 end
