@@ -39,7 +39,7 @@ module MetalClient
       end
 
       def self.cli_type
-        raise NotImplementedError
+        model_class.singular_type
       end
 
       def self.model_class
@@ -63,35 +63,31 @@ module MetalClient
         pp model_class.find(name).attributes
       end
 
+      def create(name, file)
+        pp model_class.create(name, payload: File.read(file)).attributes
+      end
+
+      def update(name, file)
+        pp model_class.update(name, payload: File.read(file)).attributes
+      end
+
       def edit(name)
       end
     end
 
     class KickstartCommand < FileCommand
-      def self.cli_type
-        'kickstart'
-      end
-
       def self.model_class
         Models::Kickstart
       end
     end
 
     class UefiCommand < FileCommand
-      def self.cli_type
-        'uefibootmenu'
-      end
-
       def self.model_class
         Models::Uefi
       end
     end
 
     class LegacyCommand < FileCommand
-      def self.cli_type
-        'legacybootmenu'
-      end
-
       def self.model_class
         Models::Legacy
       end

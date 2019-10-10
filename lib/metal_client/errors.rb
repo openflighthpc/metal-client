@@ -30,6 +30,21 @@
 module MetalClient
   class MetalClientError < StandardError; end
 
-  class NotFoundError < MetalClientError; end
+  class ExistingRecordError < StandardError
+    def self.from_record(record)
+      new <<~ERROR.chomp
+        Can not create #{record.class.singular_type} #{record.id} as it already exists
+      ERROR
+    end
+  end
+
+  class MetalAPIError < MetalClientError
+    def self.from_api_error(error)
+      new(error.env.body['errors'].first['detail'])
+    end
+  end
+
+  class NotFoundError < MetalAPIError; end
+  class ClientError < MetalAPIError; end
 end
 

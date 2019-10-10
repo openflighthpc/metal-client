@@ -35,6 +35,18 @@ require 'tempfile'
 require 'tty-editor'
 
 module MetalClient
+  CreateOrUpdateHelper = Struct.new(:record) do
+    def run(attributes)
+      # This is required as the API only implements a single PATCH end point for
+      # both creating and updating the records
+      record.mark_as_persisted!
+      record.update_attributes(attributes)
+      record
+    rescue JsonApiClient::Errors::ClientError => e
+      raise ClientError.from_api_error(e)
+    end
+  end
+
   class Model < JsonApiClient::Resource
     extend ActiveSupport::Inflector
 
@@ -51,6 +63,16 @@ module MetalClient
       raise NotFoundError, <<~ERROR.chomp
         Could not locate #{singular_type} #{name}
       ERROR
+    end
+
+    def self.create(id, attributes = {})
+      raise ExistingRecordError.from_record(find(id))
+    rescue NotFoundError
+      CreateOrUpdateHelper.new(new(id: id)).run(attributes)
+    end
+
+    def self.update(id, attributes = {})
+      CreateOrUpdateHelper.new(find(id)).run(attributes)
     end
 
     connection do |c|

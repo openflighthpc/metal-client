@@ -39,6 +39,7 @@ task :setup do
 end
 
 task console: :setup do
+  require 'metal_client/cli'
   binding.pry
 end
 

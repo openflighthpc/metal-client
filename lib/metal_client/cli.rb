@@ -80,7 +80,7 @@ module MetalClient
       SYNTAX
     end
 
-    [Commands::BootMethodCommand, *Commands::FileCommand.inherited_classes].each do |klass|
+    Commands::FileCommand.inherited_classes.each do |klass|
       command "#{klass.cli_type}" do |c|
         cli_syntax(c)
         c.sub_command_group = true
@@ -107,10 +107,15 @@ module MetalClient
       end
 
       command "#{klass.cli_type} create" do |c|
-        cli_syntax(c, 'NAME')
-        c.summary = 'Create a new metadata entry for a file'
-        c.option '--file PATH', 'Directly upload a file from the specified path'
+        cli_syntax(c, 'NAME FILE')
+        c.summary = "Upload a new #{klass.cli_type} file to the server"
         action(c, klass, method: :create)
+      end
+
+      command "#{klass.cli_type} update" do |c|
+        cli_syntax(c, 'NAME FILE')
+        c.summary = "Replace a existing #{klass.cli_type} upload with a new file"
+        action(c, klass, method: :update)
       end
     end
   end
