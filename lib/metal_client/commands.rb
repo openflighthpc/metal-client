@@ -108,9 +108,6 @@ module MetalClient
       def self.model_class
         Models::DhcpSubnet
       end
-
-      # def list_hosts(name)
-      # end
     end
 
     class DhcpHostCommand < RecordCommand
@@ -120,7 +117,7 @@ module MetalClient
 
       def list
         ids = model_class.all.map do |record|
-          subnet, name = record.id.split('/')
+          subnet, name = record.id.split('.')
           "Subnet #{subnet}: #{name}"
         end.sort
         if ids.empty?

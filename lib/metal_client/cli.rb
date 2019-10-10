@@ -118,12 +118,6 @@ module MetalClient
       end
     end
 
-    # command "#{Commands::DhcpSubnetCommand.cli_type} list-hosts" do |c|
-    #   cli_syntax(c, 'NAME')
-    #   c.summary = 'Return all the hosts within the subnet'
-    #   action(c, Commands::DhcpSubnetCommand, method: :list_hosts)
-    # end
-
     host = Commands::DhcpHostCommand
     command "#{host.cli_type}" do |c|
       cli_syntax(c)
