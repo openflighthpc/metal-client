@@ -46,6 +46,12 @@ metal: The payload attribute is required with this request
 
 This error can also be raised during an `edit` if the file hasn't changed.
 
+### Full error handling has not been implemented
+
+There will be cases where the server response with various error codes: `400`, `401`, `403`, `409`, and occasionally `500`. Generic error handling is provided by the underlining `JsonApiClient` and does not completely align with the server's usage. This is particularly apparent when `409` is raised.
+
+Full error handling will be implemented when the server `response` specification has been updated.
+
 # Contributing
 
 Fork the project. Make your feature addition or bug fix. Send a pull

@@ -156,6 +156,9 @@ module MetalClient
       def self.cli_type
         'bootmethod'
       end
+
+      def list
+      end
     end
   end
 end
