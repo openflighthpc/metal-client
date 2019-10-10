@@ -86,11 +86,19 @@ module MetalClient
       def self.model_class
         Models::Uefi
       end
+
+      def self.cli_type
+        'uefibootmenu'
+      end
     end
 
     class LegacyCommand < FileCommand
       def self.model_class
         Models::Legacy
+      end
+
+      def self.cli_type
+        'legacybootmenu'
       end
     end
 
