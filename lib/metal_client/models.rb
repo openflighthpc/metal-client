@@ -44,6 +44,8 @@ module MetalClient
       record
     rescue JsonApiClient::Errors::ClientError => e
       raise ClientError.from_api_error(e)
+    rescue JsonApiClient::Errors::InternalServerError => e
+      raise InternalServerError.from_api_error(e)
     end
   end
 
@@ -128,6 +130,9 @@ module MetalClient
     end
 
     class DhcpSubnet < PayloadModel
+      def self.table_name
+        'dhcp-subnets'
+      end
     end
   end
 end

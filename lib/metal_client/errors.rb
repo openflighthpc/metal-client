@@ -46,5 +46,6 @@ module MetalClient
 
   class NotFoundError < MetalAPIError; end
   class ClientError < MetalAPIError; end
+  class InternalServerError < MetalAPIError; end
 end
 

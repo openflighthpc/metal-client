@@ -94,6 +94,12 @@ module MetalClient
       end
     end
 
+    class DhcpSubnetCommand < FileCommand
+      def self.model_class
+        Models::DhcpSubnet
+      end
+    end
+
     # Does not inherit off FileCommand as it must form a composite of the kernels and initrds
     class BootMethodCommand
       def self.cli_type
