@@ -47,23 +47,19 @@ module MetalClient
       end
 
       def list
-        puts self.class.model_class.all.map(&:id).sort
+        models = self.class.model_class.all.map(&:id).sort
+        if models.empty?
+          $stderr.puts "No #{self.class.model_class.type} found!"
+        else
+          puts models
+        end
       end
 
       def show(name)
         pp find(name).attributes
       end
 
-      def edit(name, file: nil)
-        if file
-          find(name).upload(file)
-        else
-          find(name).edit
-        end
-      end
-
-      def create(name, file: nil)
-        self.class.model_class.create(id: name)
+      def edit(name)
       end
 
       private
@@ -110,11 +106,6 @@ module MetalClient
       end
 
       def list
-        puts [Models::KernelFile, Models::Initrd].map(&:all)
-                                                 .flatten
-                                                 .map(&:id)
-                                                 .uniq
-                                                 .sort
       end
     end
   end

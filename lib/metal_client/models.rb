@@ -33,76 +33,53 @@ require 'tempfile'
 require 'tty-editor'
 
 module MetalClient
-  class FileModel < JsonApiClient::Resource
-    # TODO: Make this an environment config
-    self.site = 'http://192.168.101.101/api'
+  class Model < JsonApiClient::Resource
+    # TODO: Make this a config value
+    self.site = ENV['APP_BASE_URL']
 
     connection do |c|
       c.faraday.authorization :Bearer, ENV['AUTH_TOKEN']
     end
-
-    def download_url
-      attributes["download-url"]
-    end
-
-    def upload_url
-      File.join(links['self'], 'upload')
-    end
-
-    def system_path
-      attributes["system-path"]
-    end
-
-    def read
-      self.class.connection.faraday.get(download_url).body
-    end
-
-    def uploaded?
-      attributes[:uploaded]
-    end
-
-    def upload(path)
-      Faraday.post(upload_url,
-                   File.read(path),
-                   "Authorization" => "Bearer #{ENV['AUTH_TOKEN']}",
-                   "Content-Type" => "application/octet-stream")
-    end
-
-    def edit
-      tmp = Tempfile.new('metal-client-download', '/tmp')
-      if uploaded?
-        tmp.write(read)
-        tmp.rewind
-      end
-      TTY::Editor.open(tmp.path)
-      tmp.rewind
-      upload(tmp.path)
-    ensure
-      tmp.close
-      tmp.unlink
-    end
   end
 
   module Models
-    class Kickstart < FileModel
-    end
+    class PayloadModel < Model
+      def self.cli_type
+      end
 
-    class Legacy < FileModel
-    end
+      def system_path
+        attributes["system-path"]
+      end
 
-    class Uefi < FileModel
-    end
+      def uploaded?
+        attributes[:uploaded]
+      end
 
-    class DhcpSubnet < FileModel
-    end
-
-    class KernelFile < FileModel
-      def self.table_name
-        'kernels'
+      def edit
+        tmp = Tempfile.new('metal-client-download', '/tmp')
+        if uploaded?
+          tmp.write(read)
+          tmp.rewind
+        end
+        TTY::Editor.open(tmp.path)
+        tmp.rewind
+        upload(tmp.path)
+      ensure
+        tmp.close
+        tmp.unlink
       end
     end
 
-    class Initrd < FileModel
+    class Kickstart < PayloadModel
+    end
+
+    class Legacy < PayloadModel
+    end
+
+    class Uefi < PayloadModel
+    end
+
+    class DhcpSubnet < PayloadModel
     end
   end
 end
