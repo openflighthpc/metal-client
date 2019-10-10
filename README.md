@@ -44,6 +44,8 @@ When a record is updated with the same file content, the `payload` is not sent w
 metal: The payload attribute is required with this request
 ```
 
+This error can also be raised during an `edit` if the file hasn't changed.
+
 # Contributing
 
 Fork the project. Make your feature addition or bug fix. Send a pull

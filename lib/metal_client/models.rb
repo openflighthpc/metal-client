@@ -75,6 +75,16 @@ module MetalClient
       CreateOrUpdateHelper.new(find(id)).run(attributes)
     end
 
+    def self.edit(id)
+      record = find(id)
+      Tempfile.open("metal-client-#{singular_type}-#{record.id}", '/tmp') do |file|
+        file.write(record.payload)
+        file.rewind
+        TTY::Editor.open(file.path)
+        CreateOrUpdateHelper.new(record).run(payload: file.read)
+      end
+    end
+
     connection do |c|
       c.faraday.authorization :Bearer, ENV['AUTH_TOKEN']
     end

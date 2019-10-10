@@ -72,6 +72,7 @@ module MetalClient
       end
 
       def edit(name)
+        pp model_class.edit(name).attributes
       end
     end
 
