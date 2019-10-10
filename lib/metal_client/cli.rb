@@ -136,5 +136,29 @@ module MetalClient
       c.summary = 'List all the configured DHCP hosts'
       action(c, host, method: :list)
     end
+
+    command "#{host.cli_type} show" do |c|
+      cli_syntax(c, 'SUBNET HOST')
+      c.summary = "Display the metadata about a #{host.cli_type}"
+      action(c, host, method: :show)
+    end
+
+    command "#{host.cli_type} create" do |c|
+      cli_syntax(c, 'SUBNET HOST FILE')
+      c.summary = "Create a new DHCP host within a subnet"
+      action(c, host, method: :create)
+    end
+
+    command "#{host.cli_type} update" do |c|
+      cli_syntax(c, 'SUBNET HOST FILE')
+      c.summary = "Update a existing DHCP hosts file"
+      action(c, host, method: :update)
+    end
+
+    command "#{host.cli_type} edit" do |c|
+      cli_syntax(c, 'SUBNET HOST')
+      c.summary = 'Edit the existing DHCP host file'
+      action(c, host, method: :edit)
+    end
   end
 end

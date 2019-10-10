@@ -129,6 +129,26 @@ module MetalClient
           puts ids
         end
       end
+
+      def show(subnet, name)
+        id = "#{subnet}.#{name}"
+        pp model_class.find(id).attributes
+      end
+
+      def create(subnet, name, file)
+        id = "#{subnet}.#{name}"
+        pp model_class.create(id, payload: File.read(file)).attributes
+      end
+
+      def update(subnet, name, file)
+        id = "#{subnet}.#{name}"
+        pp model_class.update(id, payload: File.read(file)).attributes
+      end
+
+      def edit(subnet, name)
+        id = "#{subnet}.#{name}"
+        pp model_class.edit(id).attributes
+      end
     end
 
     class BootMethodCommand
