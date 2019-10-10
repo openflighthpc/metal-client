@@ -76,6 +76,10 @@ module MetalClient
       def edit(name)
         pp model_class.edit(name).attributes
       end
+
+      def delete(name)
+        pp model_class.delete(name)
+      end
     end
 
     class KickstartCommand < FileCommand

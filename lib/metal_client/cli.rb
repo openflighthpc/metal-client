@@ -116,6 +116,12 @@ module MetalClient
         c.summary = "Replace a existing #{klass.cli_type} upload with a new file"
         action(c, klass, method: :update)
       end
+
+      command "#{klass.cli_type} delete" do |c|
+        cli_syntax(c, 'NAME')
+        c.summary = "Delete the #{klass.cli_type} file and associated metadata"
+        action(c, klass, method: :delete)
+      end
     end
 
     host = Commands::DhcpHostCommand

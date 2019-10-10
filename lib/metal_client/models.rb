@@ -46,6 +46,8 @@ module MetalClient
       raise ClientError.from_api_error(e)
     rescue JsonApiClient::Errors::InternalServerError => e
       raise InternalServerError.from_api_error(e)
+    rescue JsonApiClient::Errors::Conflict => e
+      raise ClientError.from_api_error(e)
     end
   end
 
@@ -65,6 +67,10 @@ module MetalClient
       raise NotFoundError, <<~ERROR.chomp
         Could not locate #{singular_type} #{name}
       ERROR
+    rescue JsonApiClient::Errors::ClientError => e
+      raise ClientError.from_api_error(e)
+    rescue JsonApiClient::Errors::InternalServerError => e
+      raise InternalServerError.from_api_error(e)
     end
 
     connection do |c|
@@ -78,6 +84,8 @@ module MetalClient
         raise ExistingRecordError.from_record(find(id))
       rescue NotFoundError
         CreateOrUpdateHelper.new(new(id: id)).run(attributes)
+      rescue JsonApiClient::Errors::Conflict => e
+        raise ClientError.from_api_error(e)
       end
 
       def self.update(id, attributes = {})
@@ -92,6 +100,16 @@ module MetalClient
           TTY::Editor.open(file.path)
           CreateOrUpdateHelper.new(record).run(payload: file.read)
         end
+      end
+
+      def self.delete(id)
+        find(id).destroy
+      rescue JsonApiClient::Errors::ClientError => e
+        raise ClientError.from_api_error(e)
+      rescue JsonApiClient::Errors::InternalServerError => e
+        raise InternalServerError.from_api_error(e)
+      rescue JsonApiClient::Errors::Conflict => e
+        raise ClientError.from_api_error(e)
       end
 
       def system_path
