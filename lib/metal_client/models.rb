@@ -27,6 +27,8 @@
 # https://github.com/openflighthpc/metal-client
 #===============================================================================
 
+require 'active_support/inflector/inflections'
+
 require 'json_api_client'
 require 'open-uri'
 require 'tempfile'
@@ -34,8 +36,22 @@ require 'tty-editor'
 
 module MetalClient
   class Model < JsonApiClient::Resource
+    extend ActiveSupport::Inflector
+
     # TODO: Make this a config value
     self.site = ENV['APP_BASE_URL']
+
+    def self.singular_type
+      singularize(type)
+    end
+
+    def self.find(name)
+      super(name).first
+    rescue JsonApiClient::Errors::NotFound
+      raise NotFoundError, <<~ERROR.chomp
+        Could not locate #{singular_type} #{name}
+      ERROR
+    end
 
     connection do |c|
       c.faraday.authorization :Bearer, ENV['AUTH_TOKEN']

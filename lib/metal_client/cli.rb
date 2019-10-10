@@ -29,6 +29,7 @@
 require 'commander'
 require 'metal_client/models'
 require 'metal_client/commands'
+require 'metal_client/errors'
 
 module MetalClient
   # TODO: Move me to a new file

@@ -46,8 +46,12 @@ module MetalClient
         raise NotImplementedError
       end
 
+      def model_class
+        self.class.model_class
+      end
+
       def list
-        models = self.class.model_class.all.map(&:id).sort
+        models = model_class.all.map(&:id).sort
         if models.empty?
           $stderr.puts "No #{self.class.model_class.type} found!"
         else
@@ -56,16 +60,10 @@ module MetalClient
       end
 
       def show(name)
-        pp find(name).attributes
+        pp model_class.find(name).attributes
       end
 
       def edit(name)
-      end
-
-      private
-
-      def find(name)
-        self.class.model_class.find(name).first
       end
     end
 

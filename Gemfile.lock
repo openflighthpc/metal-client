@@ -73,6 +73,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  activesupport
   commander-openflighthpc
   json_api_client
   pry
