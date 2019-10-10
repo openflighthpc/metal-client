@@ -67,26 +67,6 @@ module MetalClient
       ERROR
     end
 
-    def self.create(id, attributes = {})
-      raise ExistingRecordError.from_record(find(id))
-    rescue NotFoundError
-      CreateOrUpdateHelper.new(new(id: id)).run(attributes)
-    end
-
-    def self.update(id, attributes = {})
-      CreateOrUpdateHelper.new(find(id)).run(attributes)
-    end
-
-    def self.edit(id)
-      record = find(id)
-      Tempfile.open("metal-client-#{singular_type}-#{record.id}", '/tmp') do |file|
-        file.write(record.payload)
-        file.rewind
-        TTY::Editor.open(file.path)
-        CreateOrUpdateHelper.new(record).run(payload: file.read)
-      end
-    end
-
     connection do |c|
       c.faraday.authorization :Bearer, ENV['AUTH_TOKEN']
     end
@@ -94,7 +74,24 @@ module MetalClient
 
   module Models
     class PayloadModel < Model
-      def self.cli_type
+      def self.create(id, attributes = {})
+        raise ExistingRecordError.from_record(find(id))
+      rescue NotFoundError
+        CreateOrUpdateHelper.new(new(id: id)).run(attributes)
+      end
+
+      def self.update(id, attributes = {})
+        CreateOrUpdateHelper.new(find(id)).run(attributes)
+      end
+
+      def self.edit(id)
+        record = find(id)
+        Tempfile.open("metal-client-#{singular_type}-#{record.id}", '/tmp') do |file|
+          file.write(record.payload)
+          file.rewind
+          TTY::Editor.open(file.path)
+          CreateOrUpdateHelper.new(record).run(payload: file.read)
+        end
       end
 
       def system_path
@@ -103,20 +100,6 @@ module MetalClient
 
       def uploaded?
         attributes[:uploaded]
-      end
-
-      def edit
-        tmp = Tempfile.new('metal-client-download', '/tmp')
-        if uploaded?
-          tmp.write(read)
-          tmp.rewind
-        end
-        TTY::Editor.open(tmp.path)
-        tmp.rewind
-        upload(tmp.path)
-      ensure
-        tmp.close
-        tmp.unlink
       end
     end
 
@@ -132,6 +115,12 @@ module MetalClient
     class DhcpSubnet < PayloadModel
       def self.table_name
         'dhcp-subnets'
+      end
+    end
+
+    class DhcpHost < PayloadModel
+      def self.table_name
+        'dhcp-hosts'
       end
     end
   end

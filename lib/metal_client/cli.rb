@@ -117,5 +117,24 @@ module MetalClient
         action(c, klass, method: :update)
       end
     end
+
+    # command "#{Commands::DhcpSubnetCommand.cli_type} list-hosts" do |c|
+    #   cli_syntax(c, 'NAME')
+    #   c.summary = 'Return all the hosts within the subnet'
+    #   action(c, Commands::DhcpSubnetCommand, method: :list_hosts)
+    # end
+
+    host = Commands::DhcpHostCommand
+    command "#{host.cli_type}" do |c|
+      cli_syntax(c)
+      c.sub_command_group = true
+      c.summary = "Manage the #{host.cli_type} files"
+    end
+
+    command "#{host.cli_type} list" do |c|
+      cli_syntax(c)
+      c.summary = 'List all the configured DHCP hosts'
+      action(c, host, method: :list)
+    end
   end
 end

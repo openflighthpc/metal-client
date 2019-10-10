@@ -29,15 +29,7 @@
 
 module MetalClient
   module Commands
-    class FileCommand
-      def self.inherited(base)
-        FileCommand.inherited_classes << base
-      end
-
-      def self.inherited_classes
-        @inherited_classes ||= []
-      end
-
+    class RecordCommand
       def self.cli_type
         model_class.singular_type
       end
@@ -48,6 +40,16 @@ module MetalClient
 
       def model_class
         self.class.model_class
+      end
+    end
+
+    class FileCommand < RecordCommand
+      def self.inherited(base)
+        FileCommand.inherited_classes << base
+      end
+
+      def self.inherited_classes
+        @inherited_classes ||= []
       end
 
       def list
@@ -106,15 +108,32 @@ module MetalClient
       def self.model_class
         Models::DhcpSubnet
       end
+
+      # def list_hosts(name)
+      # end
     end
 
-    # Does not inherit off FileCommand as it must form a composite of the kernels and initrds
-    class BootMethodCommand
-      def self.cli_type
-        'bootmethod'
+    class DhcpHostCommand < RecordCommand
+      def self.model_class
+        Models::DhcpHost
       end
 
       def list
+        ids = model_class.all.map do |record|
+          subnet, name = record.id.split('/')
+          "Subnet #{subnet}: #{name}"
+        end.sort
+        if ids.empty?
+          $stderr.puts "No #{self.class.model_class.type} found!"
+        else
+          puts ids
+        end
+      end
+    end
+
+    class BootMethodCommand
+      def self.cli_type
+        'bootmethod'
       end
     end
   end
