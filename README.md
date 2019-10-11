@@ -26,6 +26,13 @@ bundle install --without development test --path vendor
 
 ### Configuration
 
+These application needs a couple of configuration parameters to specify which server to communicate with. Refer to the [reference config](etc/config.yaml.reference) for the required keys. The configs needs to be stored within `etc/config.yaml`.
+
+```
+cd /path/to/client
+touch etc/config.yaml
+vi etc/config.yaml
+```
 
 ## Known Issues
 
