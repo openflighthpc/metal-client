@@ -86,6 +86,11 @@ module MetalClient
       def self.model_class
         Models::Kickstart
       end
+
+      def show(name)
+        record = model_class.find(name)
+        pp record.attributes.merge(download_url: record.relationships.blob[:links][:related])
+      end
     end
 
     class UefiCommand < FileCommand
@@ -112,11 +117,19 @@ module MetalClient
       def self.model_class
         Models::DhcpSubnet
       end
+
+      def self.cli_type
+        'dhcpsubnet'
+      end
     end
 
     class DhcpHostCommand < RecordCommand
       def self.model_class
         Models::DhcpHost
+      end
+
+      def self.cli_type
+        'dhcphost'
       end
 
       def list
