@@ -27,6 +27,7 @@
 #===============================================================================
 
 require 'commander'
+require 'metal_client/config'
 require 'metal_client/models'
 require 'metal_client/commands'
 require 'metal_client/errors'

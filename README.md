@@ -26,12 +26,6 @@ bundle install --without development test --path vendor
 
 ### Configuration
 
-TBA
-
-
-## Authentication
-
-TBA
 
 ## Known Issues
 

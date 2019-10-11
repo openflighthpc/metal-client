@@ -55,11 +55,11 @@ module MetalClient
     extend ActiveSupport::Inflector
 
     # TODO: Make this a config value
-    self.site = ENV['APP_BASE_URL']
+    self.site = Config.app_base_url
 
     def self.octet_stream_headers
       {
-        "Authorization" => "Bearer #{ENV['AUTH_TOKEN']}",
+        "Authorization" => "Bearer #{Config.auth_token}",
         "Content-Type"  => 'application/octet-stream'
       }
     end
@@ -91,7 +91,7 @@ module MetalClient
     end
 
     connection do |c|
-      c.faraday.authorization :Bearer, ENV['AUTH_TOKEN']
+      c.faraday.authorization :Bearer, Config.auth_token
     end
   end
 
