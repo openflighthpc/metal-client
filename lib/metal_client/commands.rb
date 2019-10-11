@@ -174,6 +174,14 @@ module MetalClient
           puts models
         end
       end
+
+      def show(name)
+        pp model_class.find(name).attributes
+      end
+
+      def create(name)
+        pp model_class.create(name).attributes
+      end
     end
   end
 end

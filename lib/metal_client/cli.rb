@@ -179,6 +179,26 @@ module MetalClient
       c.summary = 'List the available boot methods'
       action(c, boot, method: :list)
     end
+
+    command "#{boot.cli_type} show" do |c|
+      cli_syntax(c, 'NAME')
+      c.summary = "Display the metadata about a #{boot.cli_type}"
+      action(c, boot, method: :show)
+    end
+
+    command "#{boot.cli_type} create" do |c|
+      cli_syntax(c, 'NAME')
+      c.summary = 'Create a new kernel and initrd pairing'
+      c.description = <<~DESC.chomp
+        This command creates a kernel and initrd pair entry on the server. It does
+        not however upload the files. As the kerenl and initial ram disks can be
+        large binary files, they are uploaded independently.
+
+        Please use the `upload-kernel` and `upload-initrd` commands to upload the
+        kernel and initrd files respectively.
+      DESC
+      action(c, boot, method: :create)
+    end
   end
 end
 

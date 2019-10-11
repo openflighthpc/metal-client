@@ -146,6 +146,15 @@ module MetalClient
       def self.table_name
         'boot-methods'
       end
+
+      def self.create(id)
+        raise ExistingRecordError.from_record(find(id))
+      rescue NotFoundError
+        record = new(id: id)
+        record.mark_as_persisted!
+        record.save
+        record
+      end
     end
   end
 end
