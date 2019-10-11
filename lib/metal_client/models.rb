@@ -141,6 +141,12 @@ module MetalClient
         'dhcp-hosts'
       end
     end
+
+    class BootMethod < Model
+      def self.table_name
+        'boot-methods'
+      end
+    end
   end
 end
 

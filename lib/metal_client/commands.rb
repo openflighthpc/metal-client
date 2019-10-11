@@ -152,12 +152,22 @@ module MetalClient
       end
     end
 
-    class BootMethodCommand
+    class BootMethodCommand < RecordCommand
       def self.cli_type
         'bootmethod'
       end
 
+      def self.model_class
+        Models::BootMethod
+      end
+
       def list
+        models = model_class.all.map(&:id).sort
+        if models.empty?
+          $stderr.puts "No #{self.class.model_class.type} found!"
+        else
+          puts models
+        end
       end
     end
   end

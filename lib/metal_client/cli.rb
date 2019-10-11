@@ -160,5 +160,19 @@ module MetalClient
       c.summary = 'Edit the existing DHCP host file'
       action(c, host, method: :edit)
     end
+
+    boot = Commands::BootMethodCommand
+    command "#{boot.cli_type}" do |c|
+      cli_syntax(c)
+      c.sub_command_group = true
+      c.summary = "Manage the #{boot.cli_type} files"
+    end
+
+    command "#{boot.cli_type} list" do |c|
+      cli_syntax(c)
+      c.summary = 'List the available boot methods'
+      action(c, boot, method: :list)
+    end
   end
 end
+
