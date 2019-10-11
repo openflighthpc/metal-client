@@ -80,6 +80,16 @@ module MetalClient
       raise InternalServerError.from_api_error(e)
     end
 
+    def self.delete(id)
+      find(id).destroy
+    rescue JsonApiClient::Errors::ClientError => e
+      raise ClientError.from_api_error(e)
+    rescue JsonApiClient::Errors::InternalServerError => e
+      raise InternalServerError.from_api_error(e)
+    rescue JsonApiClient::Errors::Conflict => e
+      raise ClientError.from_api_error(e)
+    end
+
     connection do |c|
       c.faraday.authorization :Bearer, ENV['AUTH_TOKEN']
     end
@@ -107,16 +117,6 @@ module MetalClient
           TTY::Editor.open(file.path)
           CreateOrUpdateHelper.new(record).run(payload: file.read)
         end
-      end
-
-      def self.delete(id)
-        find(id).destroy
-      rescue JsonApiClient::Errors::ClientError => e
-        raise ClientError.from_api_error(e)
-      rescue JsonApiClient::Errors::InternalServerError => e
-        raise InternalServerError.from_api_error(e)
-      rescue JsonApiClient::Errors::Conflict => e
-        raise ClientError.from_api_error(e)
       end
 
       def system_path

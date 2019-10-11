@@ -192,6 +192,10 @@ module MetalClient
         model_class.find(name).upload_initrd(path)
         pp model_class.find(name).attributes
       end
+
+      def delete(name)
+        pp model_class.delete(name)
+      end
     end
   end
 end

@@ -211,6 +211,12 @@ module MetalClient
       c.summary = 'Upload a new version of the initial ram disk'
       action(c, boot, method: :upload_initrd)
     end
+
+    command "#{boot.cli_type} delete" do |c|
+      cli_syntax(c, 'NAME')
+      c.summary = 'Remove the metadata file and associated kernel and initrd'
+      action(c, boot, method: :delete)
+    end
   end
 end
 
