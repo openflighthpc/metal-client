@@ -161,6 +161,12 @@ module MetalClient
       action(c, host, method: :edit)
     end
 
+    command "#{host.cli_type} delete" do |c|
+      cli_syntax(c, 'SUBNET HOST')
+      c.summary = "Remove the host file and reset DHCP"
+      action(c, host, method: :delete)
+    end
+
     boot = Commands::BootMethodCommand
     command "#{boot.cli_type}" do |c|
       cli_syntax(c)

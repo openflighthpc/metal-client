@@ -150,6 +150,11 @@ module MetalClient
         id = "#{subnet}.#{name}"
         pp model_class.edit(id).attributes
       end
+
+      def delete(subnet, name)
+        id = "#{subnet}.#{name}"
+        pp model_class.delete(id)
+      end
     end
 
     class BootMethodCommand < RecordCommand
