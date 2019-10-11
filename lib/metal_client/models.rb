@@ -57,6 +57,13 @@ module MetalClient
     # TODO: Make this a config value
     self.site = ENV['APP_BASE_URL']
 
+    def self.octet_stream_headers
+      {
+        "Authorization" => "Bearer #{ENV['AUTH_TOKEN']}",
+        "Content-Type"  => 'application/octet-stream'
+      }
+    end
+
     def self.singular_type
       singularize(type)
     end
@@ -154,6 +161,16 @@ module MetalClient
         record.mark_as_persisted!
         record.save
         record
+      end
+
+      def upload_kernel(path)
+        url = File.join(links.self, 'kernel-blob')
+        Faraday.post(url, File.read(path), self.class.octet_stream_headers)
+      end
+
+      def upload_initrd(path)
+        url = File.join(links.self, 'initrd-blob')
+        Faraday.post(url, File.read(path), self.class.octet_stream_headers)
       end
     end
   end

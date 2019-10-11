@@ -199,6 +199,18 @@ module MetalClient
       DESC
       action(c, boot, method: :create)
     end
+
+    command "#{boot.cli_type} upload-kernel" do |c|
+      cli_syntax(c, 'NAME')
+      c.summary = 'Upload a new version of the kernel'
+      action(c, boot, method: :upload_kernel)
+    end
+
+    command "#{boot.cli_type} upload-initrd" do |c|
+      cli_syntax(c, 'NAME')
+      c.summary = 'Upload a new version of the initial ram disk'
+      action(c, boot, method: :upload_initrd)
+    end
   end
 end
 

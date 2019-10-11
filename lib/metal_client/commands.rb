@@ -182,6 +182,16 @@ module MetalClient
       def create(name)
         pp model_class.create(name).attributes
       end
+
+      def upload_kernel(name, path)
+        model_class.find(name).upload_kernel(path)
+        pp model_class.find(name).attributes
+      end
+
+      def upload_initrd(name, path)
+        model_class.find(name).upload_initrd(path)
+        pp model_class.find(name).attributes
+      end
     end
   end
 end
