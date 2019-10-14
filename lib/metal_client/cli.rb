@@ -202,14 +202,26 @@ module MetalClient
     end
 
     command "#{boot.cli_type} upload-kernel" do |c|
-      cli_syntax(c, 'NAME')
+      cli_syntax(c, 'NAME FILEPATH')
       c.summary = 'Upload a new version of the kernel'
+      c.description = <<~DESC.chomp
+        Upload a new version of the kernel given by the FILEPATH. The #{boot.cli_type}
+        entry NAME must already exist before the upload can commence.
+
+        This action will create or replace the kernel currently stored against the #{boot.cli_type}.
+      DESC
       action(c, boot, method: :upload_kernel)
     end
 
     command "#{boot.cli_type} upload-initrd" do |c|
-      cli_syntax(c, 'NAME')
+      cli_syntax(c, 'NAME FILEPATH')
       c.summary = 'Upload a new version of the initial ram disk'
+      c.description = <<~DESC.chomp
+        Upload a new version of the initrd image give by the FILEPATH. The #{boot.cli_type}
+        entry NAME must already exist before the upload can commence.
+
+        This action will create or replace the initrd currently stored against #{boot.cli_type}.
+      DESC
       action(c, boot, method: :upload_initrd)
     end
 
