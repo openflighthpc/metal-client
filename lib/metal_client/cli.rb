@@ -90,19 +90,32 @@ module MetalClient
 
       command "#{klass.cli_type} list"  do |c|
         cli_syntax(c)
-        c.summary = "List all the #{klass.cli_type} files"
+        c.summary = "Display all the #{klass.cli_type} files"
+        c.description = <<~DESC.chomp
+          List all the existing #{klass.cli_type} files stored on the server.
+        DESC
         action(c, klass, method: :list)
       end
 
       command "#{klass.cli_type} show" do |c|
         cli_syntax(c, 'NAME')
         c.summary = "Display the metadata about a #{klass.cli_type} file"
+        
         action(c, klass, method: :show)
       end
 
       command "#{klass.cli_type} edit" do |c|
         cli_syntax(c, 'NAME')
-        c.summary = "Edit the content of the stored file"
+        c.summary = "Update the #{klass.cli_type} file through the editor"
+        c.description = <<~DESC.chomp
+          Downloads the current version of the #{klass.cli_type} file to a
+          temporary file. It is then opened by the system editor.
+
+          The saved version of the temporary file is uploaded to the server;
+          replacing the original. Exiting the editor without saving will abort
+          the edit. The original version will remain intact and any changes
+          will be lost.
+        DESC
         action(c, klass, method: :edit)
       end
 
@@ -152,13 +165,22 @@ module MetalClient
 
     command "#{host.cli_type} update" do |c|
       cli_syntax(c, 'SUBNET HOST FILE')
-      c.summary = "Update a existing DHCP hosts file"
+      c.summary = "Upload a new host config from the filesystem"
       action(c, host, method: :update)
     end
 
     command "#{host.cli_type} edit" do |c|
       cli_syntax(c, 'SUBNET HOST')
-      c.summary = 'Edit the existing DHCP host file'
+      c.summary = "Update the host config through the editor"
+      c.description = <<~DESC.chomp
+        Downloads the current version of the host config to a
+        temporary file. It is then opened by the system editor.
+
+        The saved version of the temporary file is uploaded to the server;
+        replacing the original. Exiting the editor without saving will abort
+        the edit. The original version will remain intact and any changes
+        will be lost.
+      DESC
       action(c, host, method: :edit)
     end
 
