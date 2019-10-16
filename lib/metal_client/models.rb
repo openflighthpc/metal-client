@@ -41,13 +41,6 @@ module MetalClient
     # TODO: Make this a config value
     self.site = Config.app_base_url
 
-    def self.octet_stream_headers
-      {
-        "Authorization" => "Bearer #{Config.auth_token}",
-        "Content-Type"  => 'application/octet-stream'
-      }
-    end
-
     def self.singular_type
       singularize(type)
     end
@@ -116,13 +109,29 @@ module MetalClient
       end
 
       def upload_kernel(path)
-        url = File.join(links.self, 'kernel-blob')
-        Faraday.post(url, File.read(path), self.class.octet_stream_headers)
+        upload(path, File.join(links.self, 'kernel-blob'))
       end
 
       def upload_initrd(path)
-        url = File.join(links.self, 'initrd-blob')
-        Faraday.post(url, File.read(path), self.class.octet_stream_headers)
+        upload(path, File.join(links.self, 'initrd-blob'))
+      end
+
+      private
+
+      def upload(path, url)
+        headers = {
+          "Authorization" => "Bearer #{Config.auth_token}",
+          "Content-Type"  => 'application/octet-stream'
+        }
+        Faraday.post(url, File.read(path), headers).tap do |res|
+          next if res.success?
+          message = <<~ERROR.chomp
+          The server responded with: #{res.status}
+
+          #{res.body}
+          ERROR
+          raise (res.status < 500 ? ClientError : InternalServerError), message
+        end
       end
     end
   end
