@@ -77,7 +77,7 @@ module MetalClient
     def self.cli_syntax(command, args_str = '')
       command.hidden = true if command.name.split.length > 1
       command.syntax = <<~SYNTAX.chomp
-        #{program(:name)} #{command.name} #{args_str} [options]
+        #{program(:name)} #{command.name} #{args_str}
       SYNTAX
     end
 

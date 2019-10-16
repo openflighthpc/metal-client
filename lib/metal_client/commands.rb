@@ -62,23 +62,27 @@ module MetalClient
       end
 
       def show(name)
-        pp model_class.find(name).attributes
+        pp model_class.find_id(name).attributes
       end
 
       def create(name, file)
-        pp model_class.create(name, payload: File.read(file)).attributes
+        pp model_class.create(id: name, payload: File.read(file)).attributes
       end
 
       def update(name, file)
-        pp model_class.update(name, payload: File.read(file)).attributes
+        model = model_class.find_id(name)
+        model.update(payload: File.read(file))
+        pp model.attributes
       end
 
       def edit(name)
-        pp model_class.edit(name).attributes
+        model = model_class.find_id(name)
+        model.edit
+        pp model.attributes
       end
 
       def delete(name)
-        pp model_class.delete(name)
+        pp model_class.find_id(name).destroy
       end
     end
 
@@ -88,7 +92,7 @@ module MetalClient
       end
 
       def show(name)
-        record = model_class.find(name)
+        record = model_class.find_id(name)
         pp record.attributes.merge(download_url: record.relationships.blob[:links][:related])
       end
     end
@@ -146,27 +150,31 @@ module MetalClient
 
       def show(subnet, name)
         id = "#{subnet}.#{name}"
-        pp model_class.find(id).attributes
+        pp model_class.find_id(id).attributes
       end
 
       def create(subnet, name, file)
         id = "#{subnet}.#{name}"
-        pp model_class.create(id, payload: File.read(file)).attributes
+        pp model_class.create(id: id, payload: File.read(file)).attributes
       end
 
       def update(subnet, name, file)
         id = "#{subnet}.#{name}"
-        pp model_class.update(id, payload: File.read(file)).attributes
+        record = model_class.find_id(id)
+        record.update(payload: File.read(file))
+        pp record.attributes
       end
 
       def edit(subnet, name)
         id = "#{subnet}.#{name}"
-        pp model_class.edit(id).attributes
+        record = model_class.find_id(id)
+        record.edit
+        pp record.attributes
       end
 
       def delete(subnet, name)
         id = "#{subnet}.#{name}"
-        pp model_class.delete(id)
+        pp model_class.find_id(id).destroy
       end
     end
 
@@ -189,25 +197,25 @@ module MetalClient
       end
 
       def show(name)
-        pp model_class.find(name).attributes
+        pp model_class.find_id(name).attributes
       end
 
       def create(name)
-        pp model_class.create(name).attributes
+        pp model_class.create(id: name).attributes
       end
 
       def upload_kernel(name, path)
-        model_class.find(name).upload_kernel(path)
-        pp model_class.find(name).attributes
+        model_class.find_id(name).upload_kernel(path)
+        pp model_class.find_id(name).attributes
       end
 
       def upload_initrd(name, path)
-        model_class.find(name).upload_initrd(path)
-        pp model_class.find(name).attributes
+        model_class.find_id(name).upload_initrd(path)
+        pp model_class.find_id(name).attributes
       end
 
       def delete(name)
-        pp model_class.delete(name)
+        pp model_class.find_id(name).destroy
       end
     end
   end

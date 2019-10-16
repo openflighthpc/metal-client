@@ -35,22 +35,6 @@ require 'tempfile'
 require 'tty-editor'
 
 module MetalClient
-  CreateOrUpdateHelper = Struct.new(:record) do
-    def run(attributes)
-      # This is required as the API only implements a single PATCH end point for
-      # both creating and updating the records
-      record.mark_as_persisted!
-      record.update_attributes(attributes)
-      record
-    rescue JsonApiClient::Errors::ClientError => e
-      raise ClientError.from_api_error(e)
-    rescue JsonApiClient::Errors::InternalServerError => e
-      raise InternalServerError.from_api_error(e)
-    rescue JsonApiClient::Errors::Conflict => e
-      raise ClientError.from_api_error(e)
-    end
-  end
-
   class Model < JsonApiClient::Resource
     extend ActiveSupport::Inflector
 
@@ -68,8 +52,8 @@ module MetalClient
       singularize(type)
     end
 
-    def self.find(name)
-      super(name).first
+    def self.find_id(name)
+      find(name).first
     rescue JsonApiClient::Errors::NotFound
       raise NotFoundError, <<~ERROR.chomp
         Could not locate #{singular_type} #{name}
@@ -80,16 +64,6 @@ module MetalClient
       raise InternalServerError.from_api_error(e)
     end
 
-    def self.delete(id)
-      find(id).destroy
-    rescue JsonApiClient::Errors::ClientError => e
-      raise ClientError.from_api_error(e)
-    rescue JsonApiClient::Errors::InternalServerError => e
-      raise InternalServerError.from_api_error(e)
-    rescue JsonApiClient::Errors::Conflict => e
-      raise ClientError.from_api_error(e)
-    end
-
     connection do |c|
       c.faraday.authorization :Bearer, Config.auth_token
     end
@@ -97,34 +71,21 @@ module MetalClient
 
   module Models
     class PayloadModel < Model
-      def self.create(id, attributes = {})
-        raise ExistingRecordError.from_record(find(id))
-      rescue NotFoundError
-        CreateOrUpdateHelper.new(new(id: id)).run(attributes)
-      rescue JsonApiClient::Errors::Conflict => e
-        raise ClientError.from_api_error(e)
-      end
-
-      def self.update(id, attributes = {})
-        CreateOrUpdateHelper.new(find(id)).run(attributes)
-      end
-
-      def self.edit(id)
-        record = find(id)
-        Tempfile.open("metal-client-#{singular_type}-#{record.id}", '/tmp') do |file|
-          file.write(record.payload)
-          file.rewind
-          TTY::Editor.open(file.path)
-          CreateOrUpdateHelper.new(record).run(payload: file.read)
-        end
-      end
-
       def system_path
         attributes["system-path"]
       end
 
       def uploaded?
         attributes[:uploaded]
+      end
+
+      def edit
+        Tempfile.open("metal-client-#{self.class.singular_type}-#{id}", '/tmp') do |file|
+          file.write(attributes[:payload])
+          file.rewind
+          TTY::Editor.open(file.path)
+          update(payload: file.read)
+        end
       end
     end
 
@@ -152,15 +113,6 @@ module MetalClient
     class BootMethod < Model
       def self.table_name
         'boot-methods'
-      end
-
-      def self.create(id)
-        raise ExistingRecordError.from_record(find(id))
-      rescue NotFoundError
-        record = new(id: id)
-        record.mark_as_persisted!
-        record.save
-        record
       end
 
       def upload_kernel(path)
