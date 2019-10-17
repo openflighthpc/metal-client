@@ -164,6 +164,12 @@ module MetalClient
           'Content' => ->(k) { k.attributes['payload'] }
         }
       end
+
+      def delete(name)
+        super
+      rescue JsonApiClient::Errors::Conflict => e
+        raise ClientError.from_api_error(e)
+      end
     end
 
     class DhcpHostCommand < RecordCommand
@@ -177,7 +183,9 @@ module MetalClient
 
       def self.show_table
         @show_table ||= {
-          'NAME' => ->(k) { k.id },
+          'ID' => ->(k) { k.id },
+          'Name' => ->(k) { k.name },
+          'Subnet' => ->(k) { k.subnet },
           'Size' => ->(k) { k.attributes['size'] },
           '' => ->(_) {}, # Intentionally left blank
           'Content' => ->(k) { k.attributes['payload'] }

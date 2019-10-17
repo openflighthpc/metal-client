@@ -45,11 +45,11 @@ module MetalClient
       singularize(type)
     end
 
-    def self.find_id(name)
-      find(name).first
+    def self.find_id(id)
+      find(id).first
     rescue JsonApiClient::Errors::NotFound
       raise NotFoundError, <<~ERROR.chomp
-        Could not locate #{singular_type} #{name}
+        Could not locate #{singular_type} #{id}
       ERROR
     rescue JsonApiClient::Errors::ClientError => e
       raise ClientError.from_api_error(e)
@@ -59,6 +59,11 @@ module MetalClient
 
     connection do |c|
       c.faraday.authorization :Bearer, Config.auth_token
+    end
+
+    # For most models, the `name` and `id` are the same thing. However this is not guaranteed
+    def name
+      id
     end
   end
 
@@ -100,6 +105,14 @@ module MetalClient
     class DhcpHost < PayloadModel
       def self.table_name
         'dhcp-hosts'
+      end
+
+      def subnet
+        id.split('.').first
+      end
+
+      def name
+        id.split('.').last
       end
     end
 
