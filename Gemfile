@@ -8,6 +8,7 @@ gem 'activesupport'
 gem 'commander-openflighthpc'
 gem 'json_api_client'
 gem 'tty-editor'
+gem 'tty-table'
 
 # TODO: Make me development only
 gem 'pry'

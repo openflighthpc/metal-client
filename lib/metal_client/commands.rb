@@ -27,6 +27,8 @@
 # https://github.com/openflighthpc/metal-client
 #===============================================================================
 
+require 'tty-table'
+
 module MetalClient
   module Commands
     class RecordCommand
@@ -52,6 +54,14 @@ module MetalClient
         @inherited_classes ||= []
       end
 
+      def self.show_table
+        @show_table ||= {
+          'NAME' => ->(r) { r.id },
+          'Size' => ->(r) { r.attributes.size },
+          'Content' => ->(r) { r.attributes['payload'] }
+        }
+      end
+
       def list
         models = model_class.all.map(&:id).sort
         if models.empty?
@@ -62,38 +72,51 @@ module MetalClient
       end
 
       def show(name)
-        pp model_class.find_id(name).attributes
+        puts render_show_table(model_class.find_id(name))
       end
 
       def create(name, file)
-        pp model_class.create(id: name, payload: File.read(file)).attributes
+        record = model_class.create(id: name, payload: File.read(file))
+        puts render_show_table(record)
       end
 
       def update(name, file)
         model = model_class.find_id(name)
         model.update(payload: File.read(file))
-        pp model.attributes
+        puts render_show_table model
       end
 
       def edit(name)
         model = model_class.find_id(name)
         model.edit
-        pp model.attributes
+        puts render_show_table model
       end
 
       def delete(name)
         pp model_class.find_id(name).destroy
       end
+
+      private
+
+      def render_show_table(record)
+        data = self.class.show_table.map { |k, m| [k, m.call(record)] }
+        table = TTY::Table.new data
+        table.render(:ascii, multiline: true)
+      end
     end
 
     class KickstartCommand < FileCommand
-      def self.model_class
-        Models::Kickstart
+      def self.show_table
+        @show_table ||= {
+          'NAME' => ->(k) { k.id },
+          'Size' => ->(k) { k.attributes.size },
+          'Download URL' => ->(k) { k.relationships['blob']['links']['related'] },
+          'Content' => ->(k) { k.attributes['payload'] }
+        }
       end
 
-      def show(name)
-        record = model_class.find_id(name)
-        pp record.attributes.merge(download_url: record.relationships.blob[:links][:related])
+      def self.model_class
+        Models::Kickstart
       end
     end
 
@@ -150,26 +173,27 @@ module MetalClient
 
       def show(subnet, name)
         id = "#{subnet}.#{name}"
-        pp model_class.find_id(id).attributes
+        puts render_show_table(model_class.find_id(id))
       end
 
       def create(subnet, name, file)
         id = "#{subnet}.#{name}"
-        pp model_class.create(id: id, payload: File.read(file)).attributes
+        record = model_class.create(id: id, payload: File.read(file))
+        puts render_show_table(record)
       end
 
       def update(subnet, name, file)
         id = "#{subnet}.#{name}"
         record = model_class.find_id(id)
         record.update(payload: File.read(file))
-        pp record.attributes
+        puts render_show_table(record)
       end
 
       def edit(subnet, name)
         id = "#{subnet}.#{name}"
         record = model_class.find_id(id)
         record.edit
-        pp record.attributes
+        puts render_show_table(record)
       end
 
       def delete(subnet, name)
