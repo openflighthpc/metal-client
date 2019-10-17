@@ -40,8 +40,20 @@ module MetalClient
         raise NotImplementedError
       end
 
+      def self.show_table
+        raise NotImplementedError
+      end
+
       def model_class
         self.class.model_class
+      end
+
+      private
+
+      def render_show_table(record)
+        data = self.class.show_table.map { |k, m| [k, m.call(record)] }
+        table = TTY::Table.new data
+        table.render(:ascii, multiline: true)
       end
     end
 
@@ -57,7 +69,8 @@ module MetalClient
       def self.show_table
         @show_table ||= {
           'NAME' => ->(r) { r.id },
-          'Size' => ->(r) { r.attributes.size },
+          'Size' => ->(r) { r.attributes['size'] },
+          '' => ->(_) {}, # Intentionally left blank
           'Content' => ->(r) { r.attributes['payload'] }
         }
       end
@@ -95,22 +108,15 @@ module MetalClient
       def delete(name)
         pp model_class.find_id(name).destroy
       end
-
-      private
-
-      def render_show_table(record)
-        data = self.class.show_table.map { |k, m| [k, m.call(record)] }
-        table = TTY::Table.new data
-        table.render(:ascii, multiline: true)
-      end
     end
 
     class KickstartCommand < FileCommand
       def self.show_table
         @show_table ||= {
           'NAME' => ->(k) { k.id },
-          'Size' => ->(k) { k.attributes.size },
+          'Size' => ->(k) { k.attributes['size'] },
           'Download URL' => ->(k) { k.relationships['blob']['links']['related'] },
+          '' => ->(_) {}, # Intentionally left blank
           'Content' => ->(k) { k.attributes['payload'] }
         }
       end
@@ -148,6 +154,16 @@ module MetalClient
       def self.cli_type
         'dhcpsubnet'
       end
+
+      def self.show_table
+        @show_table ||= {
+          'NAME' => ->(k) { k.id },
+          'Size' => ->(k) { k.attributes['size'] },
+          'Hosts File' => ->(k) { k.attributes['hosts-path'] },
+          '' => ->(_) {}, # Intentionally left blank
+          'Content' => ->(k) { k.attributes['payload'] }
+        }
+      end
     end
 
     class DhcpHostCommand < RecordCommand
@@ -157,6 +173,15 @@ module MetalClient
 
       def self.cli_type
         'dhcphost'
+      end
+
+      def self.show_table
+        @show_table ||= {
+          'NAME' => ->(k) { k.id },
+          'Size' => ->(k) { k.attributes['size'] },
+          '' => ->(_) {}, # Intentionally left blank
+          'Content' => ->(k) { k.attributes['payload'] }
+        }
       end
 
       def list
