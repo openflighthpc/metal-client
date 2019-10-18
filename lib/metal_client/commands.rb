@@ -48,6 +48,11 @@ module MetalClient
         self.class.model_class
       end
 
+      def show(id)
+        record = model_class.find_id(id)
+        puts render_show_table(record)
+      end
+
       private
 
       def render_show_table(record)
@@ -82,10 +87,6 @@ module MetalClient
         else
           puts models
         end
-      end
-
-      def show(name)
-        puts render_show_table(model_class.find_id(name))
       end
 
       def create(name, file)
@@ -205,8 +206,7 @@ module MetalClient
       end
 
       def show(subnet, name)
-        id = "#{subnet}.#{name}"
-        puts render_show_table(model_class.find_id(id))
+        super("#{subnet}.#{name}")
       end
 
       def create(subnet, name, file)
@@ -244,6 +244,29 @@ module MetalClient
         Models::BootMethod
       end
 
+      def self.show_table
+        @show_table ||= {
+          'NAME' => ->(r) { r.id },
+          'Status'=> ->(record) do
+            if record.attributes['complete']
+              'Both the kernel and initrd have been uploaded.'
+            elsif record.attributes['kernel-uploaded']
+              'Missing the initial ram disk! Please upload it.'
+            elsif record.attributes['initrd-uploaded']
+              'Missing the kernel! Please upload it.'
+            else
+              'Missing both the kernel and initrd! Please upload them.'
+            end
+          end,
+          'Kernel Size' => ->(record) do
+            record.attributes['kernel-uploaded'] ? record.attributes['kernel-size'] : 'n/a'
+          end,
+          'Initrd Size' => ->(record) do
+            record.attributes['initrd-uploaded'] ? record.attributes['initrd-size'] : 'n/a'
+          end
+        }
+      end
+
       def list
         models = model_class.all.map(&:id).sort
         if models.empty?
@@ -253,22 +276,18 @@ module MetalClient
         end
       end
 
-      def show(name)
-        pp model_class.find_id(name).attributes
-      end
-
       def create(name)
-        pp model_class.create(id: name).attributes
+        puts render_show_table(model_class.create(id: name))
       end
 
       def upload_kernel(name, path)
         model_class.find_id(name).upload_kernel(path)
-        pp model_class.find_id(name).attributes
+        puts render_show_table(model_class.find_id(name))
       end
 
       def upload_initrd(name, path)
         model_class.find_id(name).upload_initrd(path)
-        pp model_class.find_id(name).attributes
+        puts render_show_table(model_class.find_id(name))
       end
 
       def delete(name)
