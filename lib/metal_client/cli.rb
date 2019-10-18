@@ -172,6 +172,20 @@ module MetalClient
       command "#{klass.cli_type} delete" do |c|
         cli_syntax(c, 'NAME')
         c.summary = "Delete the #{klass.cli_type} file and associated metadata"
+        base_desc = <<~DESC.chomp
+          Delete the #{klass.cli_type} entry NAME. This removes the system file and
+          any associated metadata.
+        DESC
+        c.description = if klass == Commands::DhcpSubnetCommand
+          <<~DESC.chomp
+            #{base_desc}
+
+            The subnet must not have any hosts before it is deleted. Cascade deletion
+            of hosts is not supported.
+          DESC
+        else
+          base_desc
+        end
         action(c, klass, method: :delete)
       end
     end
@@ -232,6 +246,9 @@ module MetalClient
     command "#{host.cli_type} delete" do |c|
       cli_syntax(c, 'SUBNET HOST')
       c.summary = "Remove the host file and reset DHCP"
+      c.description = <<~DESC.chomp
+        Delete the host file entry and associated config file
+      DESC
       action(c, host, method: :delete)
     end
 
