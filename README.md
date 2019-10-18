@@ -41,71 +41,19 @@ The following is a guide on how to build a single node using `metal-client`. Thi
 ```
 # First upload the kickstart file
 > bin/metal kickstart create foo /path/to/kickstart
-{
-  "type"=>"kickstarts",
-  "id"=>"foo",
-  "size"=><size>,
-  "system-path"=>"/some/path/to/kickstarts/foo.ks",
-  "uploaded"=>true,
-  "payload"=>"<kickstart-file-content>",
-  "download_url"=>"http://example.com/kickstarts/foo/blob"
-}
-# NOTE: The download_url can be curled to directly download the kickstart file
-# There is no authorization on this route so it can be used in the PXE boot
 
 # Upload the uefi PXE boot file
 > bin/metal uefibootmenu create 01-aa-bb-cc-dd-ee-ff /path/to/uefi-pxe
-{
-  "type"=>"uefis",
-  "id"=>"01-aa-bb-cc-dd-ee-ff",
-  "payload"=>"<uefi-file-content>",
-  "size"=><size>,
-  "system-path"=>"/path/to/efi/grub.cfg/grub.cfg-01-aa-bb-cc-dd-ee-ff",
-  "uploaded"=>true
-}
 
 # Upload the kernel and initial ram disk for the build
 > bin/metal bootmethod create foobar
-{
-  "type"=>"boot-methods",
-  "id"=>"foobar",
-  "complete"=>false,
-  "kernel-system-path"=>"/some/path/to/boot/kernel-foobar",
-  "initrd-system-path"=>"/some/path/to/boot/initrd-foobar",
-  "kernel-size"=>0,
-  "initrd-size"=>0,
-  "kernel-uploaded"=>false,
-  "initrd-uploaded"=>false
-}
 > bin/metal bootmethod upload-kernel foobar /path/to/kernel
 > bin/metal bootmethod upload-initrd foobar /path/to/initrd
-{
-  "type"=>"boot-methods",
-  "id"=>"foobar",
-  "complete"=>true,
-  "kernel-system-path"=>"/some/path/to/boot/kernel-foobar",
-  "initrd-system-path"=>"/some/path/to/boot/initrd-foobar",
-  "kernel-size"=><kernel-size>,
-  "initrd-size"=><initrd-size>,
-  "kernel-uploaded"=>true,
-  "initrd-uploaded"=>true
-}
 
 # Next the node's DHCP subnet needs to be setup. This file needs to include the
 # hosts file path returned by the server. The `edit` command can be used to get
 # around the chicken and egg problem
 > bin/metal dhcpsubnet create bar-subnet /path/to/empty/file
-{
-  "type"=>"dhcp-subnets",
-  "id"=>"bar-subnet",
-  "payload"=>"",
-  "size"=>0,
-  "system-path"=>
-   "/path/to/content/etc/dhcp/current/subnets/bar-subnet.conf",
-  "uploaded"=>true,
-  "hosts-path"=>
-   "/path/to/content/etc/dhcp/current/hosts/subnet.bar-subnet.conf"}
- }
 
 # Now open the subnet and include the "hosts-path" returned above:
 > bin/metal dhcpsubnet edit bar-subnet
@@ -115,37 +63,9 @@ include "/path/to/content/etc/dhcp/current/hosts/subnet.bar-subnet.conf";
 
 # Finally add the DHCP entry for the host within the subnet
 > bin/metal dhcphost create bar-subnet foo-host /path/to/subnet/file
-{
-  "type"=>"dhcp-hosts",
-  "id"=>"bar-subnet.foo-host",
-  "payload"=>"<dhcp-host-content>",
-  "size"=><size>,
-  "system-path"=>
-   "/opt/flight/opt/metal-server/var/etc/dhcp/current/hosts/bar-subnet/foo-host.conf",
-  "uploaded"=>true
-}
 
 # The node is now ready to be booted and built
 ```
-
-## Known Issues
-
-### Update a record with the same file
-
-When a record is updated with the same file content, the `payload` is not sent with the request. This triggers an error condition on the server resulting in error along these lines. This is a known bug which will be fixed in future implementations of the server.
-
-```
-> metal kickstart update foo /tmp/test 
-metal: The payload attribute is required with this request
-```
-
-This error can also be raised during an `edit` if the file hasn't changed.
-
-### Full error handling has not been implemented
-
-There will be cases where the server response with various error codes: `400`, `401`, `403`, `409`, and occasionally `500`. Generic error handling is provided by the underlining `JsonApiClient` and does not completely align with the server's usage. This is particularly apparent when `409` is raised.
-
-Full error handling will be implemented when the server `response` specification has been updated.
 
 # Contributing
 
