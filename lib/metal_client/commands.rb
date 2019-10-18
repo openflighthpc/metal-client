@@ -158,11 +158,35 @@ module MetalClient
 
       def self.show_table
         @show_table ||= {
-          'NAME' => ->(k) { k.id },
-          'Size' => ->(k) { k.attributes['size'] },
-          'Hosts File' => ->(k) { k.attributes['hosts-path'] },
+          'NAME' => ->(r) { r.id },
+          'Size' => ->(r) { r.attributes['size'] },
+          'Hosts File' => ->(r) { r.attributes['hosts-path'] },
           '' => ->(_) {}, # Intentionally left blank
-          'Content' => ->(k) { k.attributes['payload'] }
+          'Status' => ->(r) do
+            payload = r.attributes['payload']
+            path = r.attributes['hosts-path']
+            if /.*^\s*include\s+"#{path}"\s*;\s*$.*/.match?(payload)
+              <<~STATUS.squish
+                The host configs are included in the subnet.
+              STATUS
+            elsif payload.include?(path)
+              <<~STATUS.squish
+                The main host config appears in the subnet's content, however
+                it may not be included. Please confirm manually.
+              STATUS
+            else
+              part1 = <<~STATUS.squish
+                The main host config does not appear in the subnets content!.
+                Please edit the subnet and add the following line:
+              STATUS
+              <<~STATUS.chomp
+                #{part1}
+                include "#{r.attributes['hosts-path']}";
+              STATUS
+            end
+          end,
+          ' ' => ->(_) {}, # Intentionally left blank
+          'Content' => ->(r) { r.attributes['payload'] }
         }
       end
 
