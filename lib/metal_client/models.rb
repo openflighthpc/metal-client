@@ -35,44 +35,21 @@ require 'tempfile'
 require 'tty-editor'
 
 module MetalClient
-  CreateOrUpdateHelper = Struct.new(:record) do
-    def run(attributes)
-      # This is required as the API only implements a single PATCH end point for
-      # both creating and updating the records
-      record.mark_as_persisted!
-      record.update_attributes(attributes)
-      record
-    rescue JsonApiClient::Errors::ClientError => e
-      raise ClientError.from_api_error(e)
-    rescue JsonApiClient::Errors::InternalServerError => e
-      raise InternalServerError.from_api_error(e)
-    rescue JsonApiClient::Errors::Conflict => e
-      raise ClientError.from_api_error(e)
-    end
-  end
-
   class Model < JsonApiClient::Resource
     extend ActiveSupport::Inflector
 
     # TODO: Make this a config value
     self.site = Config.app_base_url
 
-    def self.octet_stream_headers
-      {
-        "Authorization" => "Bearer #{Config.auth_token}",
-        "Content-Type"  => 'application/octet-stream'
-      }
-    end
-
     def self.singular_type
       singularize(type)
     end
 
-    def self.find(name)
-      super(name).first
+    def self.find_id(id)
+      find(id).first
     rescue JsonApiClient::Errors::NotFound
       raise NotFoundError, <<~ERROR.chomp
-        Could not locate #{singular_type} #{name}
+        Could not locate #{singular_type} #{id}
       ERROR
     rescue JsonApiClient::Errors::ClientError => e
       raise ClientError.from_api_error(e)
@@ -80,51 +57,33 @@ module MetalClient
       raise InternalServerError.from_api_error(e)
     end
 
-    def self.delete(id)
-      find(id).destroy
-    rescue JsonApiClient::Errors::ClientError => e
-      raise ClientError.from_api_error(e)
-    rescue JsonApiClient::Errors::InternalServerError => e
-      raise InternalServerError.from_api_error(e)
-    rescue JsonApiClient::Errors::Conflict => e
-      raise ClientError.from_api_error(e)
-    end
-
     connection do |c|
       c.faraday.authorization :Bearer, Config.auth_token
+    end
+
+    # For most models, the `name` and `id` are the same thing. However this is not guaranteed
+    def name
+      id
     end
   end
 
   module Models
     class PayloadModel < Model
-      def self.create(id, attributes = {})
-        raise ExistingRecordError.from_record(find(id))
-      rescue NotFoundError
-        CreateOrUpdateHelper.new(new(id: id)).run(attributes)
-      rescue JsonApiClient::Errors::Conflict => e
-        raise ClientError.from_api_error(e)
-      end
-
-      def self.update(id, attributes = {})
-        CreateOrUpdateHelper.new(find(id)).run(attributes)
-      end
-
-      def self.edit(id)
-        record = find(id)
-        Tempfile.open("metal-client-#{singular_type}-#{record.id}", '/tmp') do |file|
-          file.write(record.payload)
-          file.rewind
-          TTY::Editor.open(file.path)
-          CreateOrUpdateHelper.new(record).run(payload: file.read)
-        end
-      end
-
       def system_path
         attributes["system-path"]
       end
 
       def uploaded?
         attributes[:uploaded]
+      end
+
+      def edit
+        Tempfile.open("metal-client-#{self.class.singular_type}-#{id}", '/tmp') do |file|
+          file.write(attributes[:payload])
+          file.rewind
+          TTY::Editor.open(file.path)
+          update(payload: file.read)
+        end
       end
     end
 
@@ -147,6 +106,14 @@ module MetalClient
       def self.table_name
         'dhcp-hosts'
       end
+
+      def subnet
+        id.split('.').first
+      end
+
+      def name
+        id.split('.').last
+      end
     end
 
     class BootMethod < Model
@@ -154,23 +121,30 @@ module MetalClient
         'boot-methods'
       end
 
-      def self.create(id)
-        raise ExistingRecordError.from_record(find(id))
-      rescue NotFoundError
-        record = new(id: id)
-        record.mark_as_persisted!
-        record.save
-        record
-      end
-
       def upload_kernel(path)
-        url = File.join(links.self, 'kernel-blob')
-        Faraday.post(url, File.read(path), self.class.octet_stream_headers)
+        upload(path, File.join(links.self, 'kernel-blob'))
       end
 
       def upload_initrd(path)
-        url = File.join(links.self, 'initrd-blob')
-        Faraday.post(url, File.read(path), self.class.octet_stream_headers)
+        upload(path, File.join(links.self, 'initrd-blob'))
+      end
+
+      private
+
+      def upload(path, url)
+        headers = {
+          "Authorization" => "Bearer #{Config.auth_token}",
+          "Content-Type"  => 'application/octet-stream'
+        }
+        Faraday.post(url, File.read(path), headers).tap do |res|
+          next if res.success?
+          message = <<~ERROR.chomp
+          The server responded with: #{res.status}
+
+          #{res.body}
+          ERROR
+          raise (res.status < 500 ? ClientError : InternalServerError), message
+        end
       end
     end
   end
