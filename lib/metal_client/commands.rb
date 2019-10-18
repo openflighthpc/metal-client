@@ -74,6 +74,7 @@ module MetalClient
       def self.show_table
         @show_table ||= {
           'NAME' => ->(r) { r.id },
+          'Filename' => ->(k) { k.attributes['filename'] },
           'Size' => ->(r) { r.attributes['size'] },
           '' => ->(_) {}, # Intentionally left blank
           'Content' => ->(r) { r.attributes['payload'] }
@@ -115,6 +116,7 @@ module MetalClient
       def self.show_table
         @show_table ||= {
           'NAME' => ->(k) { k.id },
+          'Filename' => ->(k) { k.attributes['filename'] },
           'Size' => ->(k) { k.attributes['size'] },
           'Download URL' => ->(k) { k.relationships['blob']['links']['related'] },
           '' => ->(_) {}, # Intentionally left blank
