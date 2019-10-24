@@ -190,6 +190,13 @@ module MetalClient
       end
     end
 
+    grub = Commands::GrubCommand
+    command "#{grub.cli_type}" do |c|
+      cli_syntax(c)
+      c.sub_command_group = true
+      c.summary = "Manage the #{grub.cli_type} files"
+    end
+
     host = Commands::DhcpHostCommand
     command "#{host.cli_type}" do |c|
       cli_syntax(c)

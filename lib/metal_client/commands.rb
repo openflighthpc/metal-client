@@ -189,6 +189,12 @@ module MetalClient
       end
     end
 
+    class GrubCommand < RecordCommand
+      def self.model_class
+        Models::Grub
+      end
+    end
+
     class DhcpHostCommand < RecordCommand
       def self.model_class
         Models::DhcpHost

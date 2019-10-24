@@ -93,6 +93,16 @@ module MetalClient
     class Legacy < PayloadModel
     end
 
+    class Grub < PayloadModel
+      def sub_type
+        id.split('.').first
+      end
+
+      def name
+        id.split('.').first
+      end
+    end
+
     class DhcpSubnet < PayloadModel
       def self.table_name
         'dhcp-subnets'
