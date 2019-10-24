@@ -34,7 +34,7 @@ require 'metal_client/errors'
 
 module MetalClient
   # TODO: Move me to a new file
-  VERSION = '1.0.2'
+  VERSION = '2.0.0'
 
   class CLI
     extend Commander::Delegates
@@ -190,6 +190,68 @@ module MetalClient
       end
     end
 
+    grub = Commands::GrubCommand
+    command "#{grub.cli_type}" do |c|
+      cli_syntax(c)
+      c.sub_command_group = true
+      c.summary = "Manage the #{grub.cli_type} files"
+    end
+
+    command "#{grub.cli_type} list" do |c|
+      cli_syntax(c)
+      c.summary = 'List all the configured grub files'
+      action(c, grub, method: :list)
+    end
+
+    command "#{grub.cli_type} show" do |c|
+      cli_syntax(c, 'GRUB_TYPE NAME')
+      c.summary = "Display the metadata about a grub config"
+      action(c, grub, method: :show)
+    end
+
+    command "#{grub.cli_type} create" do |c|
+      cli_syntax(c, 'GRUB_TYPE NAME UPLOAD_FILE_PATH')
+      c.summary = "Upload a new grub config to the server"
+      c.description = <<~DESC.chomp
+        Uploads the file given by UPLOAD_FILE_PATH to the server. This will
+        create a new #{grub.cli_type} entry NAME.
+
+        The GRUB_TYPE should specify the architecture (e.g. x86) the file is
+        for. The available types depend on the server configuration.
+      DESC
+      action(c, grub, method: :create)
+    end
+
+    command "#{grub.cli_type} update" do |c|
+      cli_syntax(c, 'GRUB_TYPE NAME FILE')
+      c.summary = "Upload a new grub config from the filesystem"
+      action(c, grub, method: :update)
+    end
+
+    command "#{grub.cli_type} edit" do |c|
+      cli_syntax(c, 'GRUB_TYPE NAME')
+      c.summary = "Update the grub config through the editor"
+      c.description = <<~DESC.chomp
+        Downloads the current version of the grub config to a
+        temporary file. It is then opened by the system editor.
+
+        The saved version of the temporary file is uploaded to the server;
+        replacing the original. Exiting the editor without saving will abort
+        the edit. The original version will remain intact and any changes
+        will be lost.
+      DESC
+      action(c, grub, method: :edit)
+    end
+
+    command "#{grub.cli_type} delete" do |c|
+      cli_syntax(c, 'GRUB_TYPE NAME')
+      c.summary = "Remove the grub config"
+      c.description = <<~DESC.chomp
+        Delete the grub entry and associated config file
+      DESC
+      action(c, grub, method: :delete)
+    end
+
     host = Commands::DhcpHostCommand
     command "#{host.cli_type}" do |c|
       cli_syntax(c)
@@ -313,6 +375,30 @@ module MetalClient
       cli_syntax(c, 'NAME')
       c.summary = 'Remove the metadata file and associated kernel and initrd'
       action(c, boot, method: :delete)
+    end
+
+    command "enabled-services" do |c|
+      cli_syntax(c)
+      c.summary = 'List the enabled/disabled commands'
+      c.description = <<~DESC.chomp
+        Polls the server for the services it allows. This enables/disables the
+        commands within this application. Diabled commands can still be called
+        but will always return a Forbidden Error.
+      DESC
+      c.action do
+        services = Models::Service.all.map { |s| [s.id, s] }.to_h
+        rows = [
+          Commands::KickstartCommand, Commands::DhcpSubnetCommand,
+          Commands::DhcpHostCommand, Commands::LegacyCommand,
+          Commands::GrubCommand, Commands::BootMethodCommand
+        ].map do |klass|
+          [
+            klass.cli_type,
+            services[klass.model_class.table_name].attributes['enabled'] ? 'Enabled' : 'Disabled'
+          ]
+        end
+        puts TTY::Table.new(rows).render
+      end
     end
   end
 end

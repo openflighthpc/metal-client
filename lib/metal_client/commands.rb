@@ -129,16 +129,6 @@ module MetalClient
       end
     end
 
-    class UefiCommand < FileCommand
-      def self.model_class
-        Models::Uefi
-      end
-
-      def self.cli_type
-        'uefibootmenu'
-      end
-    end
-
     class LegacyCommand < FileCommand
       def self.model_class
         Models::Legacy
@@ -196,6 +186,71 @@ module MetalClient
         super
       rescue JsonApiClient::Errors::Conflict => e
         raise ClientError.from_api_error(e)
+      end
+    end
+
+    class GrubCommand < RecordCommand
+      def self.model_class
+        Models::Grub
+      end
+
+      def self.cli_type
+        'grubbootmenu'
+      end
+
+      def self.show_table
+        @show_table ||= {
+          'ID' => ->(k) { k.id },
+          'Name' => ->(k) { k.name },
+          'Grub Type' => ->(k) { k.sub_type },
+          'Size' => ->(k) { k.attributes['size'] },
+          '' => ->(_) {}, # Intentionally left blank
+          'Content' => ->(k) { k.attributes['payload'] }
+        }
+      end
+
+      def list
+        ids = model_class.all.map do |record|
+          record.id.sub('.', ': ')
+        end.sort
+        if ids.empty?
+          $stderr.puts "No #{self.class.model_class.type} found!"
+        else
+          puts ids
+        end
+      end
+
+      def show(type, name)
+        super("#{type}.#{name}")
+      end
+
+      def create(sub_type, name, file)
+        id = "#{sub_type}.#{name}"
+        record = model_class.create(id: id, payload: File.read(file))
+        puts render_show_table(record)
+      rescue JsonApiClient::Errors::ClientError
+        raise <<~ERROR.chomp
+          Failed to upload the grub config as '#{sub_type}' has not been configured on the server
+        ERROR
+      end
+
+      def update(sub_type, name, file)
+        id = "#{sub_type}.#{name}"
+        record = model_class.find_id(id)
+        record.update(payload: File.read(file))
+        puts render_show_table(record)
+      end
+
+      def edit(sub_type, name)
+        id = "#{sub_type}.#{name}"
+        record = model_class.find_id(id)
+        record.edit
+        puts render_show_table(record)
+      end
+
+      def delete(sub_type, name)
+        id = "#{sub_type}.#{name}"
+        pp model_class.find_id(id).destroy
       end
     end
 

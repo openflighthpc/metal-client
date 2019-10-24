@@ -68,6 +68,9 @@ module MetalClient
   end
 
   module Models
+    class Service < Model
+    end
+
     class PayloadModel < Model
       def system_path
         attributes["system-path"]
@@ -93,7 +96,14 @@ module MetalClient
     class Legacy < PayloadModel
     end
 
-    class Uefi < PayloadModel
+    class Grub < PayloadModel
+      def sub_type
+        id.split('.').first
+      end
+
+      def name
+        id.split('.').last
+      end
     end
 
     class DhcpSubnet < PayloadModel
