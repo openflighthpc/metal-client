@@ -93,9 +93,6 @@ module MetalClient
     class Legacy < PayloadModel
     end
 
-    class Uefi < PayloadModel
-    end
-
     class DhcpSubnet < PayloadModel
       def self.table_name
         'dhcp-subnets'

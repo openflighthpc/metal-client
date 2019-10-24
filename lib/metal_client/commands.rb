@@ -129,16 +129,6 @@ module MetalClient
       end
     end
 
-    class UefiCommand < FileCommand
-      def self.model_class
-        Models::Uefi
-      end
-
-      def self.cli_type
-        'uefibootmenu'
-      end
-    end
-
     class LegacyCommand < FileCommand
       def self.model_class
         Models::Legacy
