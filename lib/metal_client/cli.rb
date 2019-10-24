@@ -34,7 +34,7 @@ require 'metal_client/errors'
 
 module MetalClient
   # TODO: Move me to a new file
-  VERSION = '1.0.2'
+  VERSION = '2.0.0'
 
   class CLI
     extend Commander::Delegates
