@@ -193,6 +193,57 @@ module MetalClient
       def self.model_class
         Models::Grub
       end
+
+      def self.show_table
+        @show_table ||= {
+          'ID' => ->(k) { k.id },
+          'Name' => ->(k) { k.name },
+          'Grub Type' => ->(k) { k.sub_type },
+          'Size' => ->(k) { k.attributes['size'] },
+          '' => ->(_) {}, # Intentionally left blank
+          'Content' => ->(k) { k.attributes['payload'] }
+        }
+      end
+
+      def list
+        ids = model_class.all.map do |record|
+          record.id.sub('.', ': ')
+        end.sort
+        if ids.empty?
+          $stderr.puts "No #{self.class.model_class.type} found!"
+        else
+          puts ids
+        end
+      end
+
+      def show(type, name)
+        super("#{type}.#{name}")
+      end
+
+      def create(sub_type, name, file)
+        id = "#{sub_type}.#{name}"
+        record = model_class.create(id: id, payload: File.read(file))
+        puts render_show_table(record)
+      end
+
+      def update(sub_type, name, file)
+        id = "#{sub_type}.#{name}"
+        record = model_class.find_id(id)
+        record.update(payload: File.read(file))
+        puts render_show_table(record)
+      end
+
+      def edit(sub_type, name)
+        id = "#{sub_type}.#{name}"
+        record = model_class.find_id(id)
+        record.edit
+        puts render_show_table(record)
+      end
+
+      def delete(sub_type, name)
+        id = "#{sub_type}.#{name}"
+        pp model_class.find_id(id).destroy
+      end
     end
 
     class DhcpHostCommand < RecordCommand

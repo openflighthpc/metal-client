@@ -99,7 +99,7 @@ module MetalClient
       end
 
       def name
-        id.split('.').first
+        id.split('.').last
       end
     end
 
