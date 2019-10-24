@@ -228,6 +228,10 @@ module MetalClient
         id = "#{sub_type}.#{name}"
         record = model_class.create(id: id, payload: File.read(file))
         puts render_show_table(record)
+      rescue JsonApiClient::Errors::ClientError
+        raise <<~ERROR.chomp
+          Failed to upload the grub config as '#{sub_type}' has not been configured on the server
+        ERROR
       end
 
       def update(sub_type, name, file)
