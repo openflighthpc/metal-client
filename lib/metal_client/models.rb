@@ -68,6 +68,9 @@ module MetalClient
   end
 
   module Models
+    class Service < Model
+    end
+
     class PayloadModel < Model
       def system_path
         attributes["system-path"]

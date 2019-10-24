@@ -205,13 +205,13 @@ module MetalClient
 
     command "#{grub.cli_type} show" do |c|
       cli_syntax(c, 'GRUB_TYPE NAME')
-      c.summary = "Display the metadata about a #{grub.cli_type}"
+      c.summary = "Display the metadata about a grub config"
       action(c, grub, method: :show)
     end
 
     command "#{grub.cli_type} create" do |c|
       cli_syntax(c, 'GRUB_TYPE NAME UPLOAD_FILE_PATH')
-      c.summary = "Upload a new #{grub.cli_type} file to the server"
+      c.summary = "Upload a new grub config to the server"
       c.description = <<~DESC.chomp
         Uploads the file given by UPLOAD_FILE_PATH to the server. This will
         create a new #{grub.cli_type} entry NAME.
@@ -375,6 +375,30 @@ module MetalClient
       cli_syntax(c, 'NAME')
       c.summary = 'Remove the metadata file and associated kernel and initrd'
       action(c, boot, method: :delete)
+    end
+
+    command "enabled-services" do |c|
+      cli_syntax(c)
+      c.summary = 'List the enabled/disabled commands'
+      c.description = <<~DESC.chomp
+        Polls the server for the services it allows. This enables/disables the
+        commands within this application. Diabled commands can still be called
+        but will always return a Forbidden Error.
+      DESC
+      c.action do
+        services = Models::Service.all.map { |s| [s.id, s] }.to_h
+        rows = [
+          Commands::KickstartCommand, Commands::DhcpSubnetCommand,
+          Commands::DhcpHostCommand, Commands::LegacyCommand,
+          Commands::GrubCommand, Commands::BootMethodCommand
+        ].map do |klass|
+          [
+            klass.cli_type,
+            services[klass.model_class.table_name].attributes['enabled'] ? 'Enabled' : 'Disabled'
+          ]
+        end
+        puts TTY::Table.new(rows).render
+      end
     end
   end
 end

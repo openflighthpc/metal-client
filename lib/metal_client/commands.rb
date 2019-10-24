@@ -194,6 +194,10 @@ module MetalClient
         Models::Grub
       end
 
+      def self.cli_type
+        'grubbootmenu'
+      end
+
       def self.show_table
         @show_table ||= {
           'ID' => ->(k) { k.id },
