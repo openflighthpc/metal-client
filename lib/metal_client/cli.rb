@@ -314,6 +314,19 @@ module MetalClient
       action(c, host, method: :delete)
     end
 
+    named = Commands::NamedCommand
+    command "#{named.cli_type}" do |c|
+      cli_syntax(c)
+      c.sub_command_group = true
+      c.summary = "Manage the #{named.cli_type} entries"
+    end
+
+    command "#{named.cli_type} show" do |c|
+      cli_syntax(c, 'IDENTIFIER')
+      c.summary = 'Display the zone information about a BIND entry'
+      action(c, named, method: :show)
+    end
+
     boot = Commands::BootMethodCommand
     command "#{boot.cli_type}" do |c|
       cli_syntax(c)

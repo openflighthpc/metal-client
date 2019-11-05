@@ -316,6 +316,22 @@ module MetalClient
       end
     end
 
+    class NamedCommand < RecordCommand
+      def self.cli_type
+        'dnszone'
+      end
+
+      def self.model_class
+        Models::Named
+      end
+
+      def self.show_table
+        @show_table ||= {
+          'IDENTIFIER' => ->(r) { r.id }
+        }
+      end
+    end
+
     class BootMethodCommand < RecordCommand
       def self.cli_type
         'bootmethod'
