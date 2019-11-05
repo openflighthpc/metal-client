@@ -126,6 +126,64 @@ module MetalClient
       end
     end
 
+    class Named < Model
+      def zone_payload
+        attributes['zone-payload']
+      end
+
+      def zone_size
+        attributes['zone-size']
+      end
+
+      def zone_uploaded?
+        attributes['zone-uploaded']
+      end
+
+      def zone_path
+        attributes['zone-path']
+      end
+
+      def zone_relative_path
+        attributes['zone-relative-path']
+      end
+
+      def zone_edit
+        tmpname = "metal-client-#{self.class.singular_type}-zone-#{id}"
+        Tempfile.open(tmpname, '/tmp') do |file|
+          file.write(attributes['zone-payload'])
+          file.rewind
+          TTY::Editor.open(file.path)
+          update(zone_payload: file.read)
+        end
+      end
+
+      def config_payload
+        attributes['config-payload']
+      end
+
+      def config_size
+        attributes['config-size']
+      end
+
+      def config_uploaded?
+        attributes['config-uploaded']
+      end
+
+      def config_path
+        attributes['config-path']
+      end
+
+      def config_edit
+        tmpname = "metal-client-#{self.class.singular_type}-config-#{id}"
+        Tempfile.open(tmpname, '/tmp') do |file|
+          file.write(attributes['config-payload'])
+          file.rewind
+          TTY::Editor.open(file.path)
+          update(config_payload: file.read)
+        end
+      end
+    end
+
     class BootMethod < Model
       def self.table_name
         'boot-methods'
