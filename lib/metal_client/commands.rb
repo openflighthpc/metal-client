@@ -347,9 +347,6 @@ module MetalClient
           zone_payload: File.read(zone_file)
         )
         puts render_show_table(record)
-      rescue => e
-        binding.pry
-        e
       end
     end
 
