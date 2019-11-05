@@ -330,6 +330,15 @@ module MetalClient
           'IDENTIFIER' => ->(r) { r.id }
         }
       end
+
+      def list
+        models = model_class.all.map(&:id).sort
+        if models.empty?
+          $stderr.puts "No #{self.class.model_class.type} found!"
+        else
+          puts models
+        end
+      end
     end
 
     class BootMethodCommand < RecordCommand

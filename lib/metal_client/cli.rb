@@ -321,6 +321,12 @@ module MetalClient
       c.summary = "Manage the #{named.cli_type} entries"
     end
 
+    command "#{named.cli_type} list" do |c|
+      cli_syntax(c)
+      c.summary = "Return all the #{named.cli_type} entries"
+      action(c, named, method: :list)
+    end
+
     command "#{named.cli_type} show" do |c|
       cli_syntax(c, 'IDENTIFIER')
       c.summary = 'Display the zone information about a BIND entry'
