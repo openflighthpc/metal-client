@@ -339,6 +339,18 @@ module MetalClient
           puts models
         end
       end
+
+      def create(id, config_file, zone_file)
+        record = model_class.create(
+          id: id,
+          config_payload: File.read(config_file),
+          zone_payload: File.read(zone_file)
+        )
+        puts render_show_table(record)
+      rescue => e
+        binding.pry
+        e
+      end
     end
 
     class BootMethodCommand < RecordCommand

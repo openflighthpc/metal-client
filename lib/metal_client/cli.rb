@@ -333,6 +333,35 @@ module MetalClient
       action(c, named, method: :show)
     end
 
+    command "#{named.cli_type} create" do |c|
+      cli_syntax(c, 'IDENTIFIER CONFIG_FILE ZONE_FILE')
+      c.summary = "Create a new #{named.cli_type} entry"
+      c.description = <<~DESC.chomp
+        Create a new entry corresponding to the IDENTIFIER. The IDENTIFIER
+        must be in the format <alphanumeric>.<direction>. The alphanumeric
+        part maybe any letter, number, underscore, or dash. The direction
+        is either 'forward' or 'reverse'.
+
+        The CONFIG_FILE must specify the path to BIND `zone` decleration.
+        This file will be included by the main named configuration file.
+
+        The CONFIG_FILE must set the `file` directive so it can correctly
+        link to the zone configuration. Please note that the zone data
+        is stored within the subdirectory '#{Config.named_sub_dir}'.
+        Example:
+        ```
+          zone <zone-name> {
+            file "#{Config.named_sub_dir}/<IDENTIFIER>";
+            ... other configurations ...
+          }
+        ```
+
+        The ZONE_FILE must specify the path to the zone configuration data.
+        It should configure the zone as specified by "zone-name" above.
+      DESC
+      action(c, named, method: :create)
+    end
+
     boot = Commands::BootMethodCommand
     command "#{boot.cli_type}" do |c|
       cli_syntax(c)
