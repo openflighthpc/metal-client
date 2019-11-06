@@ -145,6 +145,7 @@ module MetalClient
           end
         }
         puts JSON.pretty_generate(hash)
+        raise MetalAPIError, 'The last response returned with an error code' if res.status.to_i > 399
       end
     end
 
