@@ -76,7 +76,7 @@ module MetalClient
             File.join(type, id)
           elsif member
             raise InvalidInput, <<~ERROR.squish
-              Can not send a request to a memebers route without an id! Please
+              Can not send a request to a members route without an id! Please
               use --no-member to force the request to be sent to the collection.
             ERROR
           elsif member == false
@@ -125,6 +125,7 @@ module MetalClient
         hash = {
           "status" => res.status,
           "url" => req.url,
+          "http_verb" => req.verb.to_s.upcase,
           "request_headers" => req.faraday_connection.headers.dup.tap { |h| h['Authorization'] = 'Bearer REDACTED' },
           "request_body" => req.send_body ? req.body : nil,
           "response_headers" => res.headers,
