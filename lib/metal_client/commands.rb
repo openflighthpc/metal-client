@@ -326,9 +326,16 @@ module MetalClient
       end
 
       def self.show_table
-        @show_table ||= {
-          'IDENTIFIER' => ->(r) { r.id }
-        }
+        @show_table ||= [
+          ['IDENTIFIER', ->(r) { r.id }],
+          ['', ->(_) {}],
+          ['Config File Size', ->(r) { r.config_size }],
+          ['Config Content', ->(r) { r.config_payload }],
+          ['', ->(_) {}],
+          ['Zone Relative Path', ->(r) { r.zone_relative_path }],
+          ['Zone File Size', ->(r) { r.zone_size }],
+          ['Zone Content', ->(r) { r.zone_payload }]
+        ]
       end
 
       def list
