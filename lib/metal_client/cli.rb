@@ -406,6 +406,12 @@ module MetalClient
       action(c, named, method: :edit_config)
     end
 
+    command "#{named.cli_type} delete" do |c|
+      cli_syntax(c, 'IDENTIFIER')
+      c.summary = "Remove the #{named.cli_type} entry and associated files"
+      action(c, named, method: :delete)
+    end
+
     boot = Commands::BootMethodCommand
     command "#{boot.cli_type}" do |c|
       cli_syntax(c)

@@ -379,6 +379,10 @@ module MetalClient
         record.zone_edit
         puts render_show_table(record)
       end
+
+      def delete(id)
+        pp model_class.find_id(id).destroy
+      end
     end
 
     class BootMethodCommand < RecordCommand
