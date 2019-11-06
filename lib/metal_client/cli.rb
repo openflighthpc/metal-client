@@ -520,7 +520,7 @@ module MetalClient
       c.option '--[no-]member', <<~OPT
         Explicitly set if the request is sent to the member route (/<type>/<id>).
         Using --no-member flag will send the request to the collection route
-        (/<type>). By default all POST or requests with an ID are sent to the members
+        (/<type>). By default all non-POST requests with an ID are sent to the members
         route.
       OPT
       c.option '--[no-]body', <<~OPT
