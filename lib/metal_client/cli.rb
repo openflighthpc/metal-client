@@ -342,10 +342,10 @@ module MetalClient
         part maybe any letter, number, underscore, or dash. The direction
         is either 'forward' or 'reverse'.
 
-        The CONFIG_FILE must specify the path to BIND `zone` decleration.
+        The CONFIG_FILE must specify the path to BIND zone statement.
         This file will be included by the main named configuration file.
 
-        The CONFIG_FILE must set the `file` directive so it can correctly
+        The CONFIG_FILE must set the `file` statement so it can correctly
         link to the zone configuration. Please note that the zone data
         is stored within the subdirectory '#{Config.named_sub_dir}'.
         Example:
@@ -360,6 +360,50 @@ module MetalClient
         It should configure the zone as specified by "zone-name" above.
       DESC
       action(c, named, method: :create)
+    end
+
+    command "#{named.cli_type} update-config" do |c|
+      cli_syntax(c, 'IDENTIFIER FILE')
+      c.summary = 'Upload a new zone statement from the filesystem'
+      c.description = <<~DESC
+        Update the entry IDENTIFIER with a new `zone` statement given by FILE.
+        This file will be included into the main BIND configuration file. It
+        must set the `file` statement to: '#{Config.named_sub_dir}/<IDENTIFIER>'
+      DESC
+      action(c, named, method: :update_config)
+    end
+
+    command "#{named.cli_type} update-zone" do |c|
+      cli_syntax(c, 'IDENTIFIER FILE')
+      c.summary = 'Upload a new zone configuration from the filesystem'
+      c.description = <<~DESC
+        Update the entry IDENTIFIER with new zone configuration data given by FILE.
+        The file will be stored within the named working directory ready to be
+        loaded by the zone statement.
+
+        The relative path from the working directory is: '#{Config.named_sub_dir}/IDENTIFIER'
+      DESC
+      action(c, named, method: :update_zone)
+    end
+
+    command "#{named.cli_type} edit-config" do |c|
+      cli_syntax(c, 'IDENTIFIER')
+      c.summary = 'Update the zone statement via the editor'
+      c.description = <<~DESC
+        Update the zone statement for entry IDENTIFIER. The original statement will be
+        opened in the system editor. The saved version is then uploaded to the server.
+      DESC
+      action(c, named, method: :edit_config)
+    end
+
+    command "#{named.cli_type} edit-zone" do |c|
+      cli_syntax(c, 'IDENTIFIER')
+      c.summary = 'Update the zone configuration data via the editor'
+      c.description = <<~DESC
+        Update the zone configuration data for entry IDENTIFIER. The original data will be
+        opened in the system editor. The saved version is then uploaded to the server.
+      DESC
+      action(c, named, method: :edit_config)
     end
 
     boot = Commands::BootMethodCommand

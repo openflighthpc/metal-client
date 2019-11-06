@@ -57,6 +57,15 @@ module MetalClient
       raise InternalServerError.from_api_error(e)
     end
 
+    def self.edit(payload)
+      Tempfile.open("metal-client-#{singular_type}", '/tmp') do |file|
+        file.write(payload)
+        file.rewind
+        TTY::Editor.open(file.path)
+        yield file.read
+      end
+    end
+
     connection do |c|
       c.faraday.authorization :Bearer, Config.auth_token
     end
@@ -81,11 +90,8 @@ module MetalClient
       end
 
       def edit
-        Tempfile.open("metal-client-#{self.class.singular_type}-#{id}", '/tmp') do |file|
-          file.write(attributes[:payload])
-          file.rewind
-          TTY::Editor.open(file.path)
-          update(payload: file.read)
+        self.class.edit(attributes[:payload]) do |new_payload|
+          update(payload: new_payload)
         end
       end
     end
@@ -148,12 +154,8 @@ module MetalClient
       end
 
       def zone_edit
-        tmpname = "metal-client-#{self.class.singular_type}-zone-#{id}"
-        Tempfile.open(tmpname, '/tmp') do |file|
-          file.write(attributes['zone-payload'])
-          file.rewind
-          TTY::Editor.open(file.path)
-          update(zone_payload: file.read)
+        self.class.edit(attributes['zone-payload']) do |new_payload|
+          update(zone_payload: new_payload)
         end
       end
 
@@ -174,12 +176,8 @@ module MetalClient
       end
 
       def config_edit
-        tmpname = "metal-client-#{self.class.singular_type}-config-#{id}"
-        Tempfile.open(tmpname, '/tmp') do |file|
-          file.write(attributes['config-payload'])
-          file.rewind
-          TTY::Editor.open(file.path)
-          update(config_payload: file.read)
+        self.class.edit(attributes['config-payload']) do |new_payload|
+          update(config_payload: new_payload)
         end
       end
     end

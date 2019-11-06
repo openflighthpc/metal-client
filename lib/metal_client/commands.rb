@@ -348,6 +348,30 @@ module MetalClient
         )
         puts render_show_table(record)
       end
+
+      def update_config(id, file)
+        record = model_class.find_id(id)
+        record.update(config_payload: File.read(file))
+        puts render_show_table(record)
+      end
+
+      def update_zone(id, file)
+        record = model_class.find_id(id)
+        record.update(zone_payload: File.read(file))
+        puts render_show_table(record)
+      end
+
+      def edit_config(id)
+        record = model_class.find_id(id)
+        record.config_edit
+        puts render_show_table(record)
+      end
+
+      def edit_zone(id)
+        record = model_class.find_id(id)
+        record.zone_edit
+        puts render_show_table(record)
+      end
     end
 
     class BootMethodCommand < RecordCommand
