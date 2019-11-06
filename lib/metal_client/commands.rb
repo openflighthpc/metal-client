@@ -121,7 +121,7 @@ module MetalClient
 
       def run(*a)
         req = Request.new(*a)
-        res = Request.new(*a).send_request
+        res = req.send_request
         hash = {
           "status" => res.status,
           "url" => req.url,
