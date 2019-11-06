@@ -37,18 +37,19 @@ module MetalClient
           [:get, :post, :patch, :delete]
         end
 
-        attr_reader :verb, :type, :id, :send_body, :endpoint, :attributes
+        attr_reader :verb, :type, :id, :send_body, :send_id, :attributes, :append_url
 
-        def initialize(raw_verb, type, *rest, body: nil, member: nil)
+        def initialize(raw_verb, type, *rest, body: nil, member: nil, append_url: nil)
+          # Set the request type and append_url
+          @type = type
+          @append_url = append_url
+
           # Determine the HTTP VERB
           @verb = raw_verb.downcase.to_sym.tap do |v|
             raise InvalidInput, <<~ERROR.chomp unless self.class.verbs.include?(v)
               Could not send request as '#{raw_verb}' isn't supported!
             ERROR
           end
-
-          # Set the request type
-          @type = type
 
           # Determine if their is a entry ID
           if !rest.empty? && !rest.first.include?('=')
@@ -71,21 +72,29 @@ module MetalClient
             false
           end
 
-          # Determine if the endpoint the requests will be sent to
-          @endpoint = if member && id
-            File.join(type, id)
+          # Determine if the endpoint will contain the id
+          @send_id = if member && id
+            true
           elsif member
             raise InvalidInput, <<~ERROR.squish
               Can not send a request to a members route without an id! Please
               use --no-member to force the request to be sent to the collection.
             ERROR
           elsif member == false
-            type
+            false
           elsif id || verb == :post
-            File.join(type, id)
+            true
           else
-            type
+            false
           end
+        end
+
+        def endpoint
+          if send_id
+            File.join(type, id, append_url || '')
+          else
+            File.join(type, append_url || '')
+          end.chomp('/')
         end
 
         def body
@@ -129,7 +138,11 @@ module MetalClient
           "request_headers" => req.faraday_connection.headers.dup.tap { |h| h['Authorization'] = 'Bearer REDACTED' },
           "request_body" => req.send_body ? req.body : nil,
           "response_headers" => res.headers,
-          "response_body" => JSON.parse(res.body)
+          "response_body" => if res.headers['content-type'] == 'application/vnd.api+json'
+            JSON.parse(res.body)
+          else
+            res.body
+          end
         }
         puts JSON.pretty_generate(hash)
       end

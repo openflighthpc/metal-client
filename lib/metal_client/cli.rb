@@ -527,10 +527,10 @@ module MetalClient
         Explicitly set if a json api body should be sent with the request. By default
         a body is send on POST and PATCH requests only.
       OPT
-      # c.option '--no-body', <<~OPT.squish
-      #   Send the request without a json-api body. This is the default for GET and DELETE
-      #   requests. Must not be used with --body.
-      # OPT
+      c.option '--append-url URL_FRAGMENT', <<~OPT
+        Appends the string to the end of the URL. Caution should be taken when using
+        this with --no-member as it may set an "id" in the URL but not the body.
+      OPT
       action(c, Commands::APICommand, method: :run)
     end
   end
