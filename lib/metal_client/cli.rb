@@ -498,6 +498,41 @@ module MetalClient
         puts TTY::Table.new(rows).render
       end
     end
+
+    command 'api' do |c|
+      cli_syntax(c, 'HTTP_VERB TYPE [ID] [ATTRIBUTE=VALUE...]')
+      c.summary = 'Send a request directly to the API'
+      c.description = <<~DESC
+        Directly interact with the API and returns the response to stdout. The
+        response will be json-api and is machine parseable.
+
+        The following HTTP_VERBS are supported: GET, POST, PATCH, DELETE. The TYPE
+        referes to the json-api type and does not correspond to the other command
+        names. Refer to API documentation for further details.
+
+        The ID input must uniquely identify the requested resource. The ID is optional
+        as it isn't required with all request. Caution should be taken as some
+        HTTP_VERBS always require the ID. Refer to API documentation for further
+        details.
+
+        The ATTRIBUTE and VALUES will be used to populate the body of the request.
+      DESC
+      c.option '--[no-]member', <<~OPT
+        Explicitly set if the request is sent to the member route (/<type>/<id>).
+        Using --no-member flag will send the request to the collection route
+        (/<type>). By default all POST or requests with an ID are sent to the members
+        route.
+      OPT
+      c.option '--[no-]body', <<~OPT
+        Explicitly set if a json api body should be sent with the request. By default
+        a body is send on POST and PATCH requests only.
+      OPT
+      # c.option '--no-body', <<~OPT.squish
+      #   Send the request without a json-api body. This is the default for GET and DELETE
+      #   requests. Must not be used with --body.
+      # OPT
+      action(c, Commands::APICommand, method: :run)
+    end
   end
 end
 

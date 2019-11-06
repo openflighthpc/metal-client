@@ -31,6 +31,59 @@ require 'tty-table'
 
 module MetalClient
   module Commands
+    class APICommand
+      class Request
+        def self.verbs
+          [:get, :post, :patch, :delete]
+        end
+
+        attr_reader :verb, :type, :id, :api_body, :member_route
+
+        def initialize(raw_verb, type, *rest, body: nil, member: nil)
+          # Determine the HTTP VERB
+          @verb = raw_verb.downcase.to_sym.tap do |v|
+            raise InvalidInput, <<~ERROR.chomp unless self.class.verbs.include?(v)
+              Could not send request as '#{raw_verb}' isn't supported!
+            ERROR
+          end
+
+          # Set the request type
+          @type = type
+
+          # Determine if their is a entry ID
+          if !rest.empty? && !rest.first.include?('=')
+            @id = rest.shift
+          end
+
+          # Determine if the api body should be sent with the request
+          @api_body = if body
+            true
+          elsif body == false
+            false
+          elsif [:post, :patch].include?(verb)
+            true
+          else
+            false
+          end
+
+          # Determine if the request should be sent to the members route
+          @member_route = if member
+            true
+          elsif member == false
+            false
+          elsif id || verb == :post
+            true
+          else
+            false
+          end
+        end
+      end
+
+      def run(*a)
+        puts Request.new(*a).verb
+      end
+    end
+
     class RecordCommand
       def self.cli_type
         model_class.singular_type
