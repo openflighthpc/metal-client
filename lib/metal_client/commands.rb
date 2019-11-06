@@ -89,11 +89,12 @@ module MetalClient
         end
 
         def body
-          hash = { "data" => { "type" => type } }.tap do |hash|
-            hash['data']['id'] = id if id
-            hash['data']['attributes'] = attributes
+          @body ||= begin
+            hash = { "data" => { "type" => type } }.tap do |hash|
+              hash['data']['id'] = id if id
+              hash['data']['attributes'] = attributes
+            end
           end
-          JSON.generate(hash)
         end
 
         def headers
@@ -103,24 +104,32 @@ module MetalClient
           }
         end
 
-        def send_request
-          conn = Faraday.new(
-            url: Config.app_base_url,
-            headers: headers
-          )
+        def url
+          File.join(Config.app_base_url, endpoint)
+        end
 
-          if send_body
-            conn.send(verb, endpoint) { |req| req.body = body }
-          else
-            conn.send(verb, endpoint)
+        def faraday_connection
+          @faraday_connection ||= Faraday.new(url: url, headers: headers)
+        end
+
+        def send_request
+          faraday_connection.send(verb) do |req|
+            req.body = JSON.generate(body) if send_body
           end
         end
       end
 
       def run(*a)
-        response = Request.new(*a).send_request
-        hash = JSON.parse(response.to_json)
-        hash['body'] = JSON.parse(hash['body'])
+        req = Request.new(*a)
+        res = Request.new(*a).send_request
+        hash = {
+          "status" => res.status,
+          "url" => req.url,
+          "request_headers" => req.faraday_connection.headers.dup.tap { |h| h['Authorization'] = 'Bearer REDACTED' },
+          "request_body" => req.send_body ? req.body : nil,
+          "response_headers" => res.headers,
+          "response_body" => JSON.parse(res.body)
+        }
         puts JSON.pretty_generate(hash)
       end
     end
