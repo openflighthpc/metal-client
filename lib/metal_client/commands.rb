@@ -37,7 +37,7 @@ module MetalClient
           [:get, :post, :patch, :delete]
         end
 
-        attr_reader :verb, :type, :id, :api_body, :member_route
+        attr_reader :verb, :type, :id, :send_body, :endpoint, :attributes
 
         def initialize(raw_verb, type, *rest, body: nil, member: nil)
           # Determine the HTTP VERB
@@ -55,8 +55,13 @@ module MetalClient
             @id = rest.shift
           end
 
+          # Determine the attributes
+          @attributes = rest.select { |s| s.include?('=') }
+                            .map { |s| s.split('=', 2) }
+                            .to_h
+
           # Determine if the api body should be sent with the request
-          @api_body = if body
+          @send_body = if body
             true
           elsif body == false
             false
@@ -66,21 +71,57 @@ module MetalClient
             false
           end
 
-          # Determine if the request should be sent to the members route
-          @member_route = if member
-            true
+          # Determine if the endpoint the requests will be sent to
+          @endpoint = if member && id
+            File.join(type, id)
+          elsif member
+            raise InvalidInput, <<~ERROR.squish
+              Can not send a request to a memebers route without an id! Please
+              use --no-member to force the request to be sent to the collection.
+            ERROR
           elsif member == false
-            false
+            type
           elsif id || verb == :post
-            true
+            File.join(type, id)
           else
-            false
+            type
+          end
+        end
+
+        def body
+          hash = { "data" => { "type" => type } }.tap do |hash|
+            hash['data']['id'] = id if id
+            hash['data']['attributes'] = attributes
+          end
+          JSON.generate(hash)
+        end
+
+        def headers
+          {
+            "Authorization" => "Bearer #{Config.auth_token}",
+            "Content-Type"  => 'application/vnd.api+json'
+          }
+        end
+
+        def send_request
+          conn = Faraday.new(
+            url: Config.app_base_url,
+            headers: headers
+          )
+
+          if send_body
+            conn.send(verb, endpoint) { |req| req.body = body }
+          else
+            conn.send(verb, endpoint)
           end
         end
       end
 
       def run(*a)
-        puts Request.new(*a).verb
+        response = Request.new(*a).send_request
+        hash = JSON.parse(response.to_json)
+        hash['body'] = JSON.parse(hash['body'])
+        puts JSON.pretty_generate(hash)
       end
     end
 
