@@ -34,7 +34,7 @@ require 'metal_client/errors'
 
 module MetalClient
   # TODO: Move me to a new file
-  VERSION = '2.0.0'
+  VERSION = '2.1.0'
 
   class CLI
     extend Commander::Delegates
@@ -314,6 +314,104 @@ module MetalClient
       action(c, host, method: :delete)
     end
 
+    named = Commands::NamedCommand
+    command "#{named.cli_type}" do |c|
+      cli_syntax(c)
+      c.sub_command_group = true
+      c.summary = "Manage the #{named.cli_type} entries"
+    end
+
+    command "#{named.cli_type} list" do |c|
+      cli_syntax(c)
+      c.summary = "Return all the #{named.cli_type} entries"
+      action(c, named, method: :list)
+    end
+
+    command "#{named.cli_type} show" do |c|
+      cli_syntax(c, 'IDENTIFIER')
+      c.summary = 'Display the zone information about a BIND entry'
+      action(c, named, method: :show)
+    end
+
+    command "#{named.cli_type} create" do |c|
+      cli_syntax(c, 'IDENTIFIER CONFIG_FILE ZONE_FILE')
+      c.summary = "Create a new #{named.cli_type} entry"
+      c.description = <<~DESC.chomp
+        Create a new entry corresponding to the IDENTIFIER. The IDENTIFIER
+        must be in the format <alphanumeric>.<direction>. The alphanumeric
+        part maybe any letter, number, underscore, or dash. The direction
+        is either 'forward' or 'reverse'.
+
+        The CONFIG_FILE must specify the path to BIND zone statement.
+        This file will be included by the main named configuration file.
+
+        The CONFIG_FILE must set the `file` statement so it can correctly
+        link to the zone configuration. Please note that the zone data
+        is stored within the subdirectory '#{Config.named_sub_dir}'.
+        Example:
+        ```
+          zone <zone-name> {
+            file "#{Config.named_sub_dir}/<IDENTIFIER>";
+            ... other configurations ...
+          }
+        ```
+
+        The ZONE_FILE must specify the path to the zone configuration data.
+        It should configure the zone as specified by "zone-name" above.
+      DESC
+      action(c, named, method: :create)
+    end
+
+    command "#{named.cli_type} update-config" do |c|
+      cli_syntax(c, 'IDENTIFIER FILE')
+      c.summary = 'Upload a new zone statement from the filesystem'
+      c.description = <<~DESC
+        Update the entry IDENTIFIER with a new `zone` statement given by FILE.
+        This file will be included into the main BIND configuration file. It
+        must set the `file` statement to: '#{Config.named_sub_dir}/<IDENTIFIER>'
+      DESC
+      action(c, named, method: :update_config)
+    end
+
+    command "#{named.cli_type} update-zone" do |c|
+      cli_syntax(c, 'IDENTIFIER FILE')
+      c.summary = 'Upload a new zone configuration from the filesystem'
+      c.description = <<~DESC
+        Update the entry IDENTIFIER with new zone configuration data given by FILE.
+        The file will be stored within the named working directory ready to be
+        loaded by the zone statement.
+
+        The relative path from the working directory is: '#{Config.named_sub_dir}/IDENTIFIER'
+      DESC
+      action(c, named, method: :update_zone)
+    end
+
+    command "#{named.cli_type} edit-config" do |c|
+      cli_syntax(c, 'IDENTIFIER')
+      c.summary = 'Update the zone statement via the editor'
+      c.description = <<~DESC
+        Update the zone statement for entry IDENTIFIER. The original statement will be
+        opened in the system editor. The saved version is then uploaded to the server.
+      DESC
+      action(c, named, method: :edit_config)
+    end
+
+    command "#{named.cli_type} edit-zone" do |c|
+      cli_syntax(c, 'IDENTIFIER')
+      c.summary = 'Update the zone configuration data via the editor'
+      c.description = <<~DESC
+        Update the zone configuration data for entry IDENTIFIER. The original data will be
+        opened in the system editor. The saved version is then uploaded to the server.
+      DESC
+      action(c, named, method: :edit_config)
+    end
+
+    command "#{named.cli_type} delete" do |c|
+      cli_syntax(c, 'IDENTIFIER')
+      c.summary = "Remove the #{named.cli_type} entry and associated files"
+      action(c, named, method: :delete)
+    end
+
     boot = Commands::BootMethodCommand
     command "#{boot.cli_type}" do |c|
       cli_syntax(c)
@@ -399,6 +497,41 @@ module MetalClient
         end
         puts TTY::Table.new(rows).render
       end
+    end
+
+    command 'api' do |c|
+      cli_syntax(c, 'HTTP_VERB TYPE [ID] [ATTRIBUTE=VALUE...]')
+      c.summary = 'Send a request directly to the API'
+      c.description = <<~DESC
+        Directly interact with the API and returns the response to stdout. The
+        response will be json-api and is machine parseable.
+
+        The following HTTP_VERBS are supported: GET, POST, PATCH, DELETE. The TYPE
+        referes to the json-api type and does not correspond to the other command
+        names. Refer to API documentation for further details.
+
+        The ID input must uniquely identify the requested resource. The ID is optional
+        as it isn't required with all request. Caution should be taken as some
+        HTTP_VERBS always require the ID. Refer to API documentation for further
+        details.
+
+        The ATTRIBUTE and VALUES will be used to populate the body of the request.
+      DESC
+      c.option '--[no-]member', <<~OPT
+        Explicitly set if the request is sent to the member route (/<type>/<id>).
+        Using --no-member flag will send the request to the collection route
+        (/<type>). By default all POST or requests with an ID are sent to the members
+        route.
+      OPT
+      c.option '--[no-]body', <<~OPT
+        Explicitly set if a json api body should be sent with the request. By default
+        a body is send on POST and PATCH requests only.
+      OPT
+      c.option '--append-url URL_FRAGMENT', <<~OPT
+        Appends the string to the end of the URL. Caution should be taken when using
+        this with --no-member as it may set an "id" in the URL but not the body.
+      OPT
+      action(c, Commands::APICommand, method: :run)
     end
   end
 end

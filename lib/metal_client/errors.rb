@@ -29,6 +29,7 @@
 
 module MetalClient
   class MetalClientError < StandardError; end
+  class InvalidInput < MetalClientError; end
 
   class ExistingRecordError < StandardError
     def self.from_record(record)

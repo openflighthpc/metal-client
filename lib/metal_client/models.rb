@@ -57,6 +57,15 @@ module MetalClient
       raise InternalServerError.from_api_error(e)
     end
 
+    def self.edit(payload)
+      Tempfile.open("metal-client-#{singular_type}", '/tmp') do |file|
+        file.write(payload)
+        file.rewind
+        TTY::Editor.open(file.path)
+        yield file.read
+      end
+    end
+
     connection do |c|
       c.faraday.authorization :Bearer, Config.auth_token
     end
@@ -81,11 +90,8 @@ module MetalClient
       end
 
       def edit
-        Tempfile.open("metal-client-#{self.class.singular_type}-#{id}", '/tmp') do |file|
-          file.write(attributes[:payload])
-          file.rewind
-          TTY::Editor.open(file.path)
-          update(payload: file.read)
+        self.class.edit(attributes[:payload]) do |new_payload|
+          update(payload: new_payload)
         end
       end
     end
@@ -123,6 +129,56 @@ module MetalClient
 
       def name
         id.split('.').last
+      end
+    end
+
+    class Named < Model
+      def zone_payload
+        attributes['zone-payload']
+      end
+
+      def zone_size
+        attributes['zone-size']
+      end
+
+      def zone_uploaded?
+        attributes['zone-uploaded']
+      end
+
+      def zone_path
+        attributes['zone-path']
+      end
+
+      def zone_relative_path
+        attributes['zone-relative-path']
+      end
+
+      def zone_edit
+        self.class.edit(attributes['zone-payload']) do |new_payload|
+          update(zone_payload: new_payload)
+        end
+      end
+
+      def config_payload
+        attributes['config-payload']
+      end
+
+      def config_size
+        attributes['config-size']
+      end
+
+      def config_uploaded?
+        attributes['config-uploaded']
+      end
+
+      def config_path
+        attributes['config-path']
+      end
+
+      def config_edit
+        self.class.edit(attributes['config-payload']) do |new_payload|
+          update(config_payload: new_payload)
+        end
       end
     end
 

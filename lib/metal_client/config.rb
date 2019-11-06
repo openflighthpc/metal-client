@@ -87,6 +87,10 @@ module MetalClient
         exit 1
       end
     end
+
+    def named_sub_dir
+      __data__[:named_sub_dir] || 'metal-server'
+    end
   end
 end
 
