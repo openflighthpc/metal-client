@@ -82,7 +82,7 @@ module MetalClient
             ERROR
           elsif member == false
             false
-          elsif id || verb == :post
+          elsif id && verb != :post
             true
           else
             false
