@@ -75,14 +75,11 @@ module MetalClient
                             else
                               nil
                             end
-          msg = if new_error_class && e.env.response_headers['content-type'] == 'application/vnd.api+json'
-                  e.env.body['errors'].map { |e| e['detail'] }.join("\n\n")
-                end
-          if new_error_class && msg
+          if new_error_class && e.env.response_headers['content-type'] == 'application/vnd.api+json'
             raise new_error_class, <<~MESSAGE.chomp
               #{e.message}
 
-              #{msg}
+              #{e.env.body['errors'].map do |e| e['detail'] end.join("\n\n")}
             MESSAGE
           else
             raise e
