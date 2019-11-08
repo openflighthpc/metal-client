@@ -67,9 +67,26 @@ module MetalClient
             raise RuntimeError, 'Received Interrupt!'
           end
         rescue StandardError => e
-          # TODO: Add logging
-          # Log.fatal(e.message)
-          raise e
+          new_error_class = case e
+                            when JsonApiClient::Errors::ClientError
+                              ClientError
+                            when JsonApiClient::Errors::ServerError
+                              InternalServerError
+                            else
+                              nil
+                            end
+          msg = if new_error_class && e.env.response_headers['content-type'] == 'application/vnd.api+json'
+                  e.env.body['errors'].map { |e| e['detail'] }.join("\n\n")
+                end
+          if new_error_class && msg
+            raise new_error_class, <<~MESSAGE.chomp
+              #{e.message}
+
+              #{msg}
+            MESSAGE
+          else
+            raise e
+          end
         end
       end
     end
