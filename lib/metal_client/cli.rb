@@ -34,7 +34,7 @@ require 'metal_client/errors'
 
 module MetalClient
   # TODO: Move me to a new file
-  VERSION = '2.1.0'
+  VERSION = '2.1.1'
 
   class CLI
     extend Commander::Delegates
@@ -67,9 +67,23 @@ module MetalClient
             raise RuntimeError, 'Received Interrupt!'
           end
         rescue StandardError => e
-          # TODO: Add logging
-          # Log.fatal(e.message)
-          raise e
+          new_error_class = case e
+                            when JsonApiClient::Errors::ClientError
+                              ClientError
+                            when JsonApiClient::Errors::ServerError
+                              InternalServerError
+                            else
+                              nil
+                            end
+          if new_error_class && e.env.response_headers['content-type'] == 'application/vnd.api+json'
+            raise new_error_class, <<~MESSAGE.chomp
+              #{e.message}
+
+              #{e.env.body['errors'].map do |e| e['detail'] end.join("\n\n")}
+            MESSAGE
+          else
+            raise e
+          end
         end
       end
     end
@@ -520,7 +534,7 @@ module MetalClient
       c.option '--[no-]member', <<~OPT
         Explicitly set if the request is sent to the member route (/<type>/<id>).
         Using --no-member flag will send the request to the collection route
-        (/<type>). By default all POST or requests with an ID are sent to the members
+        (/<type>). By default all non-POST requests with an ID are sent to the members
         route.
       OPT
       c.option '--[no-]body', <<~OPT
